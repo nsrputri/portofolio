@@ -182,6 +182,11 @@ test.describe('cover content', () => {
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', canonical!);
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+    // The stated size is the image's real one (a PNG stores its width and height right after its signature).
+    const png = await (await page.request.get('/og.png')).body();
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute('content', String(png.readUInt32BE(16)));
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute('content', String(png.readUInt32BE(20)));
+    await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute('content', `Cover of ${title.en}`);
   });
 });
 
