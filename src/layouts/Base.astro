@@ -46,12 +46,20 @@ const ogImage = new URL('/og.png', Astro.site);
     {/* Before first paint: sets the stored language so there is no flash of English (duplicates
          resolveLang() in src/scripts/lang.ts: inline scripts cannot import), and adds has-motion
          unless the visitor asked for reduced motion, so the folders start closed without a flash of
-         them open. Without the class, folders.ts leaves every folder open. */}
+         them open. Without the class, folders.ts leaves every folder open. If folders.ts has not
+         started within 4 seconds (the script failed to load or run) the class comes off again, so
+         the folder contents are never stuck hidden. */}
     <script is:inline>
       try {
         if (localStorage.getItem('lang') === 'id') document.documentElement.lang = 'id';
       } catch (e) {}
-      if (matchMedia('(prefers-reduced-motion: no-preference)').matches) document.documentElement.classList.add('has-motion');
+      if (matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+        document.documentElement.classList.add('has-motion');
+        setTimeout(function () {
+          var root = document.documentElement;
+          if (!root.hasAttribute('data-folders-line')) root.classList.remove('has-motion');
+        }, 4000);
+      }
     </script>
   </head>
   <body>

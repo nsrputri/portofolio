@@ -9,7 +9,8 @@ interface Props {
 const { label } = Astro.props;
 ---
 
-<div class="lang-toggle" role="group" aria-labelledby="lang-toggle-label">
+{/* A region rather than a bare group: the hidden label would otherwise sit outside every landmark (axe `region`). */}
+<div class="lang-toggle" role="region" aria-labelledby="lang-toggle-label">
   <span id="lang-toggle-label" class="visually-hidden"><T text={label} /></span>
   <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
   <button type="button" data-set-lang="id" lang="id" aria-pressed="false">ID</button>

@@ -26,7 +26,7 @@ const external = [
   <div class="foot-txt">
     <p class="foot-url">{Astro.site?.host}</p>
     <p class="foot-thanks"><T text={site.thanks} /></p>
-    <ul class="links">
+    <ul class="links" role="list">
       <li><a href={`mailto:${links.email}`}>Email</a></li>
       {
         external.map((link) => (

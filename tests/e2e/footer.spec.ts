@@ -104,6 +104,12 @@ test.describe('open graph image', () => {
     expect(png.readUInt32BE(16), 'width').toBe(1200);
     expect(png.readUInt32BE(20), 'height').toBe(630);
   });
+
+  test('og image is small enough for WhatsApp', async ({ page }) => {
+    // WhatsApp drops a link preview image of about 300 KB or more.
+    const response = await page.request.get('/og.png');
+    expect((await response.body()).length).toBeLessThan(300_000);
+  });
 });
 
 // The room that lets the last folder scroll past the open line must sit above the footer, not under it.

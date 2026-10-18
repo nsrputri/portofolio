@@ -29,7 +29,9 @@ Jalankan di terminal, di dalam folder proyek.
 status: { en: 'Open to internship', id: 'Terbuka untuk magang' },
 ```
 
-Di tagline dan label sudut cover, `*kata*` membuat kata itu miring dan `\n` membuat baris baru.
+Di tagline, label sudut cover, dan judul tiap bagian (`about.heading`, `study.heading`, `work.heading`), `*kata*` membuat kata itu miring dan `\n` membuat baris baru.
+
+Hanya beberapa isian yang berupa teks biasa, bukan pasangan `{ en, id }`, karena tidak diterjemahkan: `site.name`, `site.stickerSub`, `title` dan `issuer` di setiap sertifikat, `about.skills` (daftar teks), dan `about.song`.
 
 **Yang boleh dikosongkan** (hapus barisnya, tautan atau fotonya otomatis tidak muncul): `links.whatsapp` (angka saja dengan kode negara, tanpa `+`, spasi, atau `-`, misalnya `6281234567890`), `links.instagram` (alamat lengkap `https://instagram.com/...`), dan `coverPhoto` (foto latar cover; tanpa itu cover memakai gradasi).
 
@@ -66,6 +68,8 @@ Ini gambar yang muncul saat tautan situsmu dibagikan di WhatsApp, LinkedIn, dan 
 1. Terminal 1: `npm run build`, lalu `npm run preview`. Biarkan tetap jalan.
 2. Terminal 2: `npm run og`.
 3. Hentikan `npm run preview` dengan `Ctrl+C`, lalu simpan `public/og.png` yang baru ke git.
+
+Ukuran filenya dijaga di bawah 300 KB, karena WhatsApp membuang gambar pratinjau yang lebih besar. Kalau cover-nya terlalu rumit (misalnya foto besar yang sangat detail), `npm run og` berhenti dengan pesan dan fotonya perlu dibuat lebih sederhana.
 
 ## 6. Alamat situs
 

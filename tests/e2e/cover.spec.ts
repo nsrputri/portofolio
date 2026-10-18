@@ -53,7 +53,7 @@ for (const viewport of VIEWPORTS) {
 
       test(`toggle does not overlap corner label (${lang})`, async ({ page }) => {
         await openIn(page, lang);
-        const toggle = await boxOf(page.locator('[role="group"]:has([data-set-lang])'));
+        const toggle = await boxOf(page.locator('.lang-toggle'));
         const corner = await boxOf(page.locator('.cover-corner--right'));
         const overlaps =
           toggle.x < corner.x + corner.width &&

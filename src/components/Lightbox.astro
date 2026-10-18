@@ -13,7 +13,7 @@ const { close } = Astro.props;
      The dialog is named by the .lb-title it currently holds. Styles are in global.css. */}
 <dialog id="lightbox" class="lightbox" aria-labelledby="lightbox-title">
   <button type="button" class="lightbox-close"><T text={close} /><span aria-hidden="true">✕</span></button>
-  <div class="lightbox-body"></div>
+  <div class="lightbox-body" tabindex="0"></div>
 </dialog>
 
 <script>

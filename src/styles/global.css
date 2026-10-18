@@ -40,6 +40,9 @@ html[lang="id"] [data-l="en"] {
 
 .folder {
   position: relative;
+  /* A tab jump scrolls the folder to the top of the window. This keeps its tab clear of the fixed
+     language toggle (12px from the top, 34px tall) instead of leaving it underneath. */
+  scroll-margin-top: 56px;
   --c: var(--beige);
   /* The mockup's --muted is about 3.5:1 on the pink and cream paper, short of the 4.5:1 small text needs. */
   --muted: #57524c;
@@ -287,6 +290,12 @@ html:has(dialog[open]) {
   outline-offset: 3px;
 }
 
+/* Focusable so a keyboard user can scroll the details with the arrow keys when they overflow. */
+.lightbox-body:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -6px;
+}
+
 /* The dialog itself has no padding, so a click that lands on it is a click on the backdrop. */
 .lightbox-body {
   flex: 1 1 auto;
@@ -380,5 +389,37 @@ html:has(dialog[open]) {
 @media (max-width: 600px) {
   .lb-photos {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- print ---------- */
+
+/* Paper has no scroll to open the folders with: every folder prints open, as with reduced motion.
+   !important also beats the inline styles of an animation that happens to be running. */
+@media print {
+  html {
+    /* Browsers leave backgrounds out of a printout by default, which would leave the cover's light text on white. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html.has-motion .folder:not([data-open]) {
+    margin-inline: 0 !important;
+  }
+
+  html.has-motion .folder:not([data-open]) .folder-body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  html.has-motion .folder:not([data-open]) .folder-content {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .lang-toggle,
+  /* The spacer folders.ts adds under the stack so the last folder can scroll open. */
+  .stack + div {
+    display: none !important;
   }
 }

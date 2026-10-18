@@ -14,7 +14,7 @@ const columns = Math.min(study.items.length, 5);
 <div class="study">
   <p class="kicker"><T text={study.kicker} /></p>
   <h2 class="h-serif"><T text={study.heading} rich /></h2>
-  <ol class="timeline" style={`--columns:${columns}`}>
+  <ol class="timeline" role="list" style={`--columns:${columns}`}>
     {
       study.items.map((item) => (
         <li class:list={['pop', { now: item.current }]} aria-current={item.current ? 'step' : undefined}>

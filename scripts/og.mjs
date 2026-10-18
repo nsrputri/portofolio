@@ -4,9 +4,13 @@
 // 1200x630: that leaves room for all four folder tabs (a 1200x630 window is too short for the last
 // one) and keeps the text crisp.
 //
+// WhatsApp drops a preview image of about 300 KB or more, so the PNG is saved as a palette image
+// (256 colours or fewer) at maximum compression, and the script stops if it still comes out too big.
+//
 // Needs the built site running first (in another terminal):  npm run build  then  npm run preview
 // Then run:  npm run og
 // Run it again after changing the cover (tagline, photo, colours), then commit public/og.png.
+import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import sharp from 'sharp';
@@ -17,6 +21,15 @@ const HEIGHT = 630;
 /** The page is laid out this much wider than the picture. */
 const ZOOM_OUT = 0.8;
 const output = fileURLToPath(new URL('../public/og.png', import.meta.url));
+/** WhatsApp drops og:images of about 300 KB or more; stay clearly under. */
+const MAX_BYTES = 280 * 1000;
+/** Palette settings to try in turn, from best looking to smallest, until the file fits. */
+const ENCODINGS = [
+  { colours: 256, quality: 90 },
+  { colours: 192, quality: 80 },
+  { colours: 128, quality: 70 },
+  { colours: 64, quality: 60 },
+];
 
 const browser = await chromium.launch();
 try {
@@ -52,8 +65,23 @@ try {
   await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 
   const shot = await page.screenshot();
-  await sharp(shot).resize(WIDTH, HEIGHT).png().toFile(output);
-  console.log(`Wrote ${output}`);
+  const scaled = sharp(shot).resize(WIDTH, HEIGHT);
+  let written = null;
+  for (const { colours, quality } of ENCODINGS) {
+    const png = await scaled.clone().png({ palette: true, colours, quality, effort: 10, compressionLevel: 9 }).toBuffer();
+    if (png.length <= MAX_BYTES) {
+      written = { png, colours };
+      break;
+    }
+  }
+  if (!written) {
+    throw new Error(
+      `public/og.png would still be over ${MAX_BYTES / 1000} KB with 64 colours, which WhatsApp would drop. ` +
+        'Use a smaller or simpler cover photo and run this again.',
+    );
+  }
+  await writeFile(output, written.png);
+  console.log(`Wrote ${output} (${(written.png.length / 1000).toFixed(0)} KB, ${written.colours} colours)`);
 } finally {
   await browser.close();
 }
