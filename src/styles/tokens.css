@@ -1,0 +1,19 @@
+:root {
+  --bg: #efebe4;
+  --paper: #fbf9f5;
+  --ink: #2a2826;
+  --muted: #6d6862;
+  --beige: #dad3c3;
+  --pink: #e8c8c2;
+  --blue: #bccad5;
+  --butter: #f1e6b9;
+  --board: #2f6fe0;
+  --clip: #ee5ea9;
+  --red: #d2473e;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --mono: 'DM Mono', ui-monospace, monospace;
+  --hand: 'Caveat', cursive;
+  --sans: 'DM Sans Variable', system-ui, sans-serif;
+  --tab-h: 54px;
+  --gutter: clamp(16px, 4vw, 52px);
+}
