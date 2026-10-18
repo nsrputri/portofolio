@@ -154,6 +154,29 @@ describe('parseContent', () => {
     expect(() => parseContent(raw)).toThrow(/site\.portrait: expected an imported image/);
   });
 
+  // Astro counts every read of an imported image's `src` as using the original file, and then ships
+  // the full-size original (EXIF and GPS included) next to the optimised copies.
+  it('checks an image without reading its src', () => {
+    let srcReads = 0;
+    const tracked = { width: 1, height: 1, format: 'jpg' } as Record<string, unknown>;
+    Object.defineProperty(tracked, 'src', {
+      enumerable: true,
+      get() {
+        srcReads += 1;
+        return '/x.jpg';
+      },
+    });
+    const raw = mutated((c) => {
+      c.site.portrait = tracked;
+    });
+    expect(() => parseContent(raw)).not.toThrow();
+    expect(srcReads).toBe(0);
+    const noSrc = mutated((c) => {
+      c.site.portrait = { width: 1, height: 1, format: 'jpg' };
+    });
+    expect(() => parseContent(noSrc)).toThrow(/site\.portrait: expected an imported image/);
+  });
+
   it('rejects empty lists and out-of-range years', () => {
     const noFacts = mutated((c) => {
       c.about.facts = [];

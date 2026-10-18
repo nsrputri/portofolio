@@ -13,12 +13,16 @@ export const localized = z.strictObject({
 });
 export type Localized = z.infer<typeof localized>;
 
-/** An image imported through Astro's asset pipeline (`import x from '...jpg'`). */
+/**
+ * An image imported through Astro's asset pipeline (`import x from '...jpg'`). It only asks whether
+ * `src` is there and never reads it: Astro treats a read of `src` as the page using the original file
+ * and then publishes the full-size original, EXIF data included, next to the optimised copies.
+ */
 const image = z.custom<ImageMetadata>(
   (value) =>
     typeof value === 'object' &&
     value !== null &&
-    typeof (value as ImageMetadata).src === 'string' &&
+    'src' in value &&
     typeof (value as ImageMetadata).width === 'number' &&
     typeof (value as ImageMetadata).height === 'number',
   { message: 'expected an imported image' },
