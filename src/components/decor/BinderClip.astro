@@ -1,0 +1,54 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<span class:list={['binder', className]} aria-hidden="true">
+  <i class="b-wire"></i><i class="b-wire"></i><i class="b-body"></i>
+</span>
+
+<style>
+  /* Clamps onto the top of the nearest positioned parent, poking out above the folder. */
+  .binder {
+    position: absolute;
+    right: clamp(8px, 4vw, 60px);
+    top: calc(-1 * clamp(24px, 3.4vw, 44px) - 30px);
+    width: 62px;
+    height: 70px;
+    rotate: 8deg;
+  }
+
+  .b-body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40px;
+    border-radius: 3px;
+    background: linear-gradient(#2a2a2a, #111);
+    clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%);
+  }
+
+  .b-wire {
+    position: absolute;
+    bottom: 30px;
+    width: 22px;
+    height: 40px;
+    border: 3px solid #a9adb2;
+    border-bottom: 0;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .b-wire:first-child {
+    left: 8px;
+    rotate: -14deg;
+  }
+
+  .b-wire:nth-child(2) {
+    right: 8px;
+    rotate: 14deg;
+  }
+</style>

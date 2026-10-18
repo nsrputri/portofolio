@@ -24,6 +24,14 @@ export function safeLocalStorage(): Storage | null {
   }
 }
 
+/** Sets the alt text of every `img[data-alt-en]` under `root` to its text in `lang`. */
+export function syncImageAlts(root: ParentNode, lang: Lang): void {
+  root.querySelectorAll<HTMLImageElement>('img[data-alt-en]').forEach((img) => {
+    const alt = img.getAttribute(`data-alt-${lang}`);
+    if (alt !== null) img.alt = alt;
+  });
+}
+
 /**
  * Switches every language-dependent piece of the document that CSS cannot reach:
  * `<html lang>`, image alt text, the title, the meta description and the toggle
@@ -34,10 +42,7 @@ export function applyLang(doc: Document, lang: Lang): void {
   const root = doc.documentElement;
   root.lang = lang;
 
-  doc.querySelectorAll<HTMLImageElement>('img[data-alt-en]').forEach((img) => {
-    const alt = img.getAttribute(`data-alt-${lang}`);
-    if (alt !== null) img.alt = alt;
-  });
+  syncImageAlts(doc, lang);
 
   const title = root.getAttribute(`data-title-${lang}`);
   if (title !== null) doc.title = title;

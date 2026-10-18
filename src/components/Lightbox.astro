@@ -1,0 +1,23 @@
+---
+import type { Localized } from '../data/schema';
+import T from './T.astro';
+
+interface Props {
+  close: Localized;
+}
+
+const { close } = Astro.props;
+---
+
+{/* One dialog for the whole page. initLightbox() fills .lightbox-body from the card's <template>.
+     The dialog is named by the .lb-title it currently holds. Styles are in global.css. */}
+<dialog id="lightbox" class="lightbox" aria-labelledby="lightbox-title">
+  <button type="button" class="lightbox-close"><T text={close} /><span aria-hidden="true">✕</span></button>
+  <div class="lightbox-body"></div>
+</dialog>
+
+<script>
+  import { initLightbox } from '../scripts/lightbox';
+
+  initLightbox(document);
+</script>

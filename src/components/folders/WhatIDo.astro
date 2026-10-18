@@ -1,0 +1,171 @@
+---
+import type { SiteContent } from '../../data/schema';
+import BiImage from '../BiImage.astro';
+import T from '../T.astro';
+import BinderClip from '../decor/BinderClip.astro';
+
+interface Props {
+  work: SiteContent['work'];
+  ui: SiteContent['ui'];
+}
+
+const { work, ui } = Astro.props;
+// The thumbnail repeats what the card's text already says and the opened details carry the real
+// description, so reading it out as well would only make the button's name longer.
+const DECORATIVE_ALT = { en: '', id: '' };
+---
+
+<div class="work">
+  <BinderClip />
+  <p class="kicker"><T text={work.kicker} /></p>
+  <h2 class="h-serif"><T text={work.heading} rich /></h2>
+
+  <div class="work-grid">
+    {
+      work.items.map((item, i) => (
+        <button type="button" class="w-card pop" data-lightbox={`lb-work-${i + 1}`} aria-haspopup="dialog">
+          <BiImage
+            class="w-photo"
+            src={item.photo}
+            alt={DECORATIVE_ALT}
+            widths={[320, 640]}
+            sizes="(max-width: 600px) 90vw, (max-width: 980px) 45vw, 22vw"
+          />
+          <span class="tag"><T text={ui.categories[item.category]} /></span>
+          <span class="w-title"><T text={item.title} /></span>
+          <span class="meta"><T text={item.meta} /></span>
+        </button>
+      ))
+    }
+  </div>
+
+  {/* What the lightbox shows. Nothing in a template is rendered or loaded until a card is opened. */}
+  {
+    work.items.map((item, i) => (
+      <template id={`lb-work-${i + 1}`}>
+        <article class="lb-detail">
+          <h3 class="lb-title"><T text={item.title} /></h3>
+          <p class="lb-sub">
+            <span class="tag"><T text={ui.categories[item.category]} /></span>
+            <span class="meta"><T text={item.meta} /></span>
+          </p>
+          <p class="lb-text"><T text={item.details} /></p>
+          <div class="lb-photos">
+            <BiImage
+              src={item.photo}
+              alt={item.photoAlt}
+              widths={[480, 800, 1200]}
+              sizes="(max-width: 600px) 90vw, 800px"
+              loading="lazy"
+            />
+            {item.gallery.map((shot) => (
+              <BiImage
+                src={shot.image}
+                alt={shot.alt}
+                widths={[480, 800]}
+                sizes="(max-width: 600px) 90vw, 400px"
+                loading="lazy"
+              />
+            ))}
+          </div>
+        </article>
+      </template>
+    ))
+  }
+</div>
+
+<style>
+  .work {
+    position: relative;
+  }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 28px);
+    margin-top: 32px;
+  }
+
+  /* A card is a button, reset to a plain white card. */
+  .w-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 10px 10px 16px;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: 0 12px 26px rgba(30, 40, 60, 0.14);
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      translate 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .w-card:nth-child(odd) {
+    rotate: -1.2deg;
+  }
+
+  .w-card:nth-child(even) {
+    rotate: 1.4deg;
+  }
+
+  .w-card:hover {
+    translate: 0 -4px;
+    box-shadow: 0 18px 30px rgba(30, 40, 60, 0.2);
+  }
+
+  .w-card:focus-visible {
+    outline: 3px solid var(--ink);
+    outline-offset: 4px;
+  }
+
+  .w-card :global(.w-photo) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  /* .tag and .meta look the same in the lightbox, so their style is global; only the spacing is the card's. */
+  .w-card .tag {
+    align-self: flex-start;
+    margin-top: 12px;
+  }
+
+  .w-title {
+    display: block;
+    margin-top: 8px;
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .w-card .meta {
+    display: block;
+    margin-top: 6px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .w-card {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .work-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .work-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

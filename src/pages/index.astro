@@ -3,8 +3,11 @@ import Base from '../layouts/Base.astro';
 import Cover from '../components/Cover.astro';
 import Folder from '../components/Folder.astro';
 import LangToggle from '../components/LangToggle.astro';
+import Lightbox from '../components/Lightbox.astro';
 import AboutMe from '../components/folders/AboutMe.astro';
+import Certificates from '../components/folders/Certificates.astro';
 import StudyJourney from '../components/folders/StudyJourney.astro';
+import WhatIDo from '../components/folders/WhatIDo.astro';
 import { content } from '../data/content';
 
 const { folders } = content.ui;
@@ -20,8 +23,12 @@ const { folders } = content.ui;
     <Folder id="study" no={2} label={folders.study} color="beige" tab="right">
       <StudyJourney study={content.study} />
     </Folder>
-    {/* Empty shells: the What I Do and Certificates contents go in these two. */}
-    <Folder id="work" no={3} label={folders.work} color="blue" tab="left" />
-    <Folder id="cert" no={4} label={folders.cert} color="butter" tab="right" />
+    <Folder id="work" no={3} label={folders.work} color="blue" tab="left">
+      <WhatIDo work={content.work} ui={content.ui} />
+    </Folder>
+    <Folder id="cert" no={4} label={folders.cert} color="butter" tab="right">
+      <Certificates certificates={content.certificates} ui={content.ui} />
+    </Folder>
   </main>
+  <Lightbox close={content.ui.close} />
 </Base>

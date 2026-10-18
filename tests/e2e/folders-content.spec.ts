@@ -76,6 +76,7 @@ test.describe('folder shell', () => {
         for (const [current, next] of [
           ['about', 'study'],
           ['study', 'work'],
+          ['work', 'cert'],
         ]) {
           const gap = await page.evaluate(
             ([cur, nxt]) => {
@@ -293,6 +294,100 @@ test.describe('study journey', () => {
     await expect(kicker).toHaveText('// perjalanan kuliah');
     await expect(firstTitle).toHaveText('Masuk TRI UGM');
     await expect(emphasis).toHaveText('“apa itu IP address?”');
+  });
+});
+
+test.describe('what I do', () => {
+  const cards = (page: Page) => page.locator('#work .w-card');
+
+  test('what I do cards show localized category', async ({ page }) => {
+    await gotoStatic(page);
+    await expect(cards(page)).toHaveCount(4);
+    const firstTag = cards(page).first().locator('.tag [data-l]:visible');
+    await expect(firstTag).toHaveText('Practicum');
+    await idButton(page).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+    await expect(firstTag).toHaveText('Praktikum');
+  });
+
+  test('cards are buttons named by their text and wired to a detail template', async ({ page }) => {
+    await gotoStatic(page);
+    const first = cards(page).first();
+    await expect(first).toHaveJSProperty('tagName', 'BUTTON');
+    await expect(first).toHaveAttribute('type', 'button');
+    await expect(first).toHaveAttribute('aria-haspopup', 'dialog');
+    await expect(page.getByRole('button', { name: /Configuring a small office network with Mikrotik/ })).toHaveCount(1);
+    // Each card points at its own <template>; the details are not in the page until a card is opened.
+    const ids = await cards(page).evaluateAll((els) => els.map((el) => el.getAttribute('data-lightbox')));
+    expect(ids).toEqual(['lb-work-1', 'lb-work-2', 'lb-work-3', 'lb-work-4']);
+    for (const id of ids as string[]) {
+      expect(await page.evaluate((tid) => document.getElementById(tid)?.tagName, id), id).toBe('TEMPLATE');
+    }
+  });
+
+  test('what I do text follows the language', async ({ page }) => {
+    await gotoStatic(page);
+    const kicker = page.locator('#work .kicker [data-l]:visible');
+    const emphasis = page.locator('#work h2 em:visible');
+    const firstTitle = cards(page).first().locator('.w-title [data-l]:visible');
+    const firstMeta = cards(page).first().locator('.meta [data-l]:visible');
+
+    await expect(kicker).toHaveText('// what I do at uni');
+    await expect(emphasis).toHaveText('and committees.');
+    await expect(firstTitle).toHaveText('Configuring a small office network with Mikrotik');
+    await expect(firstMeta).toHaveText('Networking Lab · 2024');
+
+    await idButton(page).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+    await expect(kicker).toHaveText('// yang aku kerjakan di kuliah');
+    await expect(emphasis).toHaveText('dan kepanitiaan.');
+    await expect(firstTitle).toHaveText('Konfigurasi jaringan kantor kecil dengan Mikrotik');
+    await expect(firstMeta).toHaveText('Lab Jaringan · 2024');
+  });
+
+  test('the binder clip is decoration', async ({ page }) => {
+    await gotoStatic(page);
+    await expect(page.locator('#work .binder')).toHaveAttribute('aria-hidden', 'true');
+  });
+});
+
+test.describe('certificates', () => {
+  const cards = (page: Page) => page.locator('#cert .c-card');
+
+  test('certificates numbered 01–04', async ({ page }) => {
+    await gotoStatic(page);
+    await expect(cards(page)).toHaveCount(4);
+    await expect(page.locator('.c-card .c-no')).toHaveText(['01', '02', '03', '04']);
+  });
+
+  test('cards show title, issuer and year, tilted in turn', async ({ page }) => {
+    await gotoStatic(page);
+    await expect(cards(page).first().locator('.c-title')).toHaveText('MTCNA');
+    await expect(cards(page).first().locator('.c-meta')).toHaveText('MikroTik · 2024');
+    await expect(cards(page).nth(1)).toHaveAccessibleName(/CCNA: Introduction to Networks/);
+    const tilts = await cards(page).evaluateAll((els) => els.map((el) => (el as HTMLElement).style.getPropertyValue('--r')));
+    expect(tilts).toEqual(['-3deg', '2deg', '-1.5deg', '3deg']);
+    const ids = await cards(page).evaluateAll((els) => els.map((el) => el.getAttribute('data-lightbox')));
+    expect(ids).toEqual(['lb-cert-1', 'lb-cert-2', 'lb-cert-3', 'lb-cert-4']);
+    await expect(cards(page).first()).toHaveJSProperty('tagName', 'BUTTON');
+    await expect(cards(page).first().locator('.clip')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  test('the board title is the same English decor in both languages', async ({ page }) => {
+    await gotoStatic(page);
+    const title = page.locator('#cert .board-title');
+    await expect(title).toHaveText('CERTIFICATES >>>>');
+    await expect(title).toHaveCSS('font-family', /Silkscreen/);
+    await expect(title).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await idButton(page).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+    await expect(title).toHaveText('CERTIFICATES >>>>');
+  });
+
+  test('the board is blue with pink clips', async ({ page }) => {
+    await gotoStatic(page);
+    await expect(page.locator('#cert .board')).toHaveCSS('background-color', 'rgb(47, 111, 224)');
+    await expect(cards(page).first().locator('.clip')).toHaveCSS('background-color', 'rgb(238, 94, 169)');
   });
 });
 

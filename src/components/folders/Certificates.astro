@@ -1,0 +1,239 @@
+---
+import type { SiteContent } from '../../data/schema';
+import BiImage from '../BiImage.astro';
+import T from '../T.astro';
+
+interface Props {
+  certificates: SiteContent['certificates'];
+  ui: SiteContent['ui'];
+}
+
+const { certificates, ui } = Astro.props;
+// The cards lean in turn, as if pinned up by hand.
+const TILTS = ['-3deg', '2deg', '-1.5deg', '3deg'];
+// The thumbnail repeats what the card's text already says and the opened scan carries the real
+// description, so reading it out as well would only make the button's name longer.
+const DECORATIVE_ALT = { en: '', id: '' };
+---
+
+<div class="board">
+  {/* English decor in both languages. The folder tab already carries the translated name. */}
+  <h2 class="board-title" lang="en">CERTIFICATES <span aria-hidden="true">&gt;&gt;&gt;&gt;</span></h2>
+
+  <div class="board-grid">
+    {
+      certificates.items.map((cert, i) => (
+        <button
+          type="button"
+          class="c-card pop"
+          style={`--r:${TILTS[i % TILTS.length]}`}
+          data-lightbox={`lb-cert-${i + 1}`}
+          aria-haspopup="dialog"
+        >
+          <span class="clip" aria-hidden="true" />
+          <BiImage
+            class="c-photo"
+            src={cert.image}
+            alt={DECORATIVE_ALT}
+            widths={[320, 640]}
+            sizes="(max-width: 600px) 80vw, (max-width: 980px) 40vw, 20vw"
+          />
+          <span class="c-no">{String(i + 1).padStart(2, '0')}</span>
+          <span class="c-title">{cert.title}</span>
+          <span class="c-meta">
+            {cert.issuer} · {cert.year}
+          </span>
+        </button>
+      ))
+    }
+  </div>
+
+  {/* What the lightbox shows. Nothing in a template is rendered or loaded until a card is opened. */}
+  {
+    certificates.items.map((cert, i) => (
+      <template id={`lb-cert-${i + 1}`}>
+        <article class="lb-detail">
+          <BiImage
+            class="lb-scan"
+            src={cert.image}
+            alt={cert.alt}
+            widths={[640, 960, 1280, 1600]}
+            sizes="(max-width: 1000px) 92vw, 900px"
+            loading="eager"
+          />
+          <h3 class="lb-title">{cert.title}</h3>
+          <p class="lb-meta">
+            {cert.issuer} · {cert.year}
+          </p>
+          {(cert.credentialUrl || cert.pdf) && (
+            <p class="lb-links">
+              {cert.credentialUrl && (
+                <a class="lb-link" href={cert.credentialUrl} target="_blank" rel="noopener">
+                  <T text={ui.viewCredential} />
+                  <span aria-hidden="true">↗</span>
+                </a>
+              )}
+              {cert.pdf && (
+                <a class="lb-link" href={cert.pdf} target="_blank" rel="noopener" aria-label={`${cert.title} PDF`}>
+                  PDF<span aria-hidden="true">↗</span>
+                </a>
+              )}
+            </p>
+          )}
+        </article>
+      </template>
+    ))
+  }
+</div>
+
+<style>
+  .board {
+    position: relative;
+    padding: clamp(22px, 3vw, 44px);
+    border-radius: 18px;
+    background-color: var(--board);
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.28) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.28) 1px, transparent 1px);
+    background-size: 52px 52px;
+    box-shadow:
+      inset 0 0 0 8px rgba(255, 255, 255, 0.08),
+      0 18px 40px rgba(20, 50, 120, 0.25);
+  }
+
+  .board-title {
+    font: 400 clamp(22px, 2.8vw, 34px) / 1 'Silkscreen', var(--mono);
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-shadow: 3px 3px 0 #173d9c;
+  }
+
+  .board-title span {
+    margin-left: 8px;
+    letter-spacing: -0.1em;
+  }
+
+  .board-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(18px, 2.4vw, 32px);
+    margin-top: 48px;
+  }
+
+  /* A card is a button, reset to a plain sheet of paper. */
+  .c-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    rotate: var(--r);
+    padding: 26px 14px 18px 30px;
+    border: 0;
+    border-radius: 0;
+    background: #fbfbf7;
+    box-shadow: 0 16px 28px rgba(0, 20, 80, 0.32);
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      translate 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .c-card:hover {
+    translate: 0 -4px;
+    box-shadow: 0 22px 32px rgba(0, 20, 80, 0.4);
+  }
+
+  .c-card:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 5px;
+  }
+
+  /* The holes left behind when the page was torn out of a spiral notebook. */
+  .c-card::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 16px;
+    bottom: 16px;
+    width: 10px;
+    background: radial-gradient(circle, var(--board) 3.6px, transparent 4.2px) 0 0 / 10px 22px repeat-y;
+  }
+
+  .clip {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 1;
+    width: 60px;
+    height: 28px;
+    border-radius: 4px;
+    background: var(--clip);
+    box-shadow: 0 3px 0 #c13f84;
+  }
+
+  .clip::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -20px;
+    translate: -50% 0;
+    width: 26px;
+    height: 24px;
+    border: 3px solid #b5b9be;
+    border-bottom: 0;
+    border-radius: 13px 13px 0 0;
+  }
+
+  .c-card :global(.c-photo) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: linear-gradient(140deg, #f3f0e7, #dcd5c4);
+  }
+
+  .c-no {
+    display: block;
+    margin-top: 12px;
+    font: 700 22px / 1 var(--sans);
+  }
+
+  .c-title {
+    display: block;
+    margin-top: 4px;
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .c-meta {
+    display: block;
+    margin-top: 5px;
+    font: 500 12px var(--mono);
+    color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .c-card {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .board-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .board-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

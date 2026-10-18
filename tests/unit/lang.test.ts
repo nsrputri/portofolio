@@ -7,6 +7,7 @@ import {
   readStoredLang,
   resolveLang,
   safeLocalStorage,
+  syncImageAlts,
 } from '../../src/scripts/lang';
 
 function setupDocument() {
@@ -85,6 +86,21 @@ describe('safeLocalStorage', () => {
     } finally {
       spy.mockRestore();
     }
+  });
+});
+
+describe('syncImageAlts', () => {
+  it('sets alt text only inside the given root, so a detached fragment can be synced', () => {
+    document.body.innerHTML = '<img data-alt-en="page en" data-alt-id="page id" alt="page en">';
+    const fragment = document.createElement('div');
+    fragment.innerHTML = '<img data-alt-en="a" data-alt-id="b" alt="a"><img alt="plain">';
+
+    syncImageAlts(fragment, 'id');
+
+    const [synced, plain] = fragment.querySelectorAll('img');
+    expect(synced.alt).toBe('b');
+    expect(plain.alt).toBe('plain');
+    expect(document.querySelector('img')!.alt).toBe('page en');
   });
 });
 
