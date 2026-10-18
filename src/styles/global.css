@@ -155,6 +155,27 @@ html[lang="id"] [data-l="en"] {
   padding-bottom: calc(var(--overlap) + 48px);
 }
 
+/* ---------- closed folders (motion on) ---------- */
+
+/* With motion on (html.has-motion, set before first paint), a folder without [data-open] sits closed
+   in the stack: inset and showing only its band. folders.ts animates between this look and the open
+   one, then clears its inline styles, so these rules are the closed look. */
+html.has-motion .folder:not([data-open]) {
+  margin-inline: 3.5vw;
+}
+
+html.has-motion .folder:not([data-open]) .folder-body {
+  height: calc(var(--V) + 20px);
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+/* Hidden as well as transparent, so keyboard and screen reader users never land inside a shut folder. */
+html.has-motion .folder:not([data-open]) .folder-content {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* ---------- type shared by the folder contents ---------- */
 
 .kicker {

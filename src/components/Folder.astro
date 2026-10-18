@@ -14,16 +14,19 @@ interface Props {
 }
 
 const { id, no, label, color, tab } = Astro.props;
+const bodyId = `${id}-body`;
 ---
 
+{/* Rendered open, which is what reduced motion keeps. With motion on, folders.ts closes the folder
+     and keeps aria-expanded in step with it. */}
 <section class="folder" id={id} data-index={no - 1} data-tab={tab} style={`--c:var(--${color})`}>
   <div class="folder-tabrow">
-    <button class="folder-tab" type="button">
+    <button class="folder-tab" type="button" aria-expanded="true" aria-controls={bodyId}>
       <span class="no" aria-hidden="true">{String(no).padStart(2, '0')}</span>
       <T text={label} />
     </button>
   </div>
-  <div class="folder-body">
+  <div class="folder-body" id={bodyId}>
     <div class="folder-content"><slot /></div>
   </div>
 </section>

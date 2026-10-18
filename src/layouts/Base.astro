@@ -42,12 +42,15 @@ const ogImage = new URL('/og.png', Astro.site);
     <meta property="og:image" content={ogImage} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
-    {/* Sets the stored language before first paint so there is no flash of English.
-         Duplicates resolveLang() in src/scripts/lang.ts: inline scripts cannot import. */}
+    {/* Before first paint: sets the stored language so there is no flash of English (duplicates
+         resolveLang() in src/scripts/lang.ts: inline scripts cannot import), and adds has-motion
+         unless the visitor asked for reduced motion, so the folders start closed without a flash of
+         them open. Without the class, folders.ts leaves every folder open. */}
     <script is:inline>
       try {
         if (localStorage.getItem('lang') === 'id') document.documentElement.lang = 'id';
       } catch (e) {}
+      if (matchMedia('(prefers-reduced-motion: no-preference)').matches) document.documentElement.classList.add('has-motion');
     </script>
   </head>
   <body>

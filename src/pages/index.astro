@@ -31,4 +31,9 @@ const { folders } = content.ui;
     </Folder>
   </main>
   <Lightbox close={content.ui.close} />
+  <script>
+    import { initFolders } from '../scripts/folders';
+
+    initFolders(document);
+  </script>
 </Base>
