@@ -53,6 +53,23 @@ describe('parseContent', () => {
     expect(() => parseContent(raw)).toThrow(/site\.cv\.en/);
   });
 
+  // A javascript: link would run code when clicked; an http: link opens without encryption.
+  it('accepts only https links for profiles and credentials', () => {
+    const fields: [string, (c: Fixture, url: string) => void][] = [
+      ['site.links.linkedin', (c, url) => (c.site.links.linkedin = url)],
+      ['site.links.github', (c, url) => (c.site.links.github = url)],
+      ['site.links.instagram', (c, url) => (c.site.links.instagram = url)],
+      ['certificates.items.0.credentialUrl', (c, url) => (c.certificates.items[0].credentialUrl = url)],
+    ];
+    for (const [path, set] of fields) {
+      const pattern = new RegExp(`- ${path.replaceAll('.', '\\.')}: expected a full address starting with https://`);
+      for (const url of ['javascript:alert(1)', 'http://example.com/me', 'ftp://example.com/me']) {
+        expect(() => parseContent(mutated((c) => set(c, url))), `${path} = ${url}`).toThrow(pattern);
+      }
+      expect(() => parseContent(mutated((c) => set(c, 'https://example.com/me'))), path).not.toThrow();
+    }
+  });
+
   it('treats whatsapp as optional digits only', () => {
     expect(() => parseContent(valid())).not.toThrow();
     const ok = mutated((c) => {

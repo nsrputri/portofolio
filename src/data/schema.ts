@@ -30,6 +30,9 @@ const image = z.custom<ImageMetadata>(
 
 const galleryImage = z.strictObject({ image, alt: localized });
 
+/** A web address that starts with https://. A javascript: link would run code when clicked. */
+const httpsUrl = z.url({ protocol: /^https$/, error: 'expected a full address starting with https://' });
+
 const workItem = z.strictObject({
   category: z.enum(['practicum', 'project', 'organization', 'competition']),
   title: localized,
@@ -86,7 +89,7 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
     year: z.number().int().min(2000).max(2100),
     image,
     alt: localized,
-    credentialUrl: z.url().optional(),
+    credentialUrl: httpsUrl.optional(),
     pdf: publicFile(/^\/certificates\/[\w.-]+\.pdf$/, publicDir).optional(),
   });
 
@@ -111,10 +114,10 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
       cv: z.strictObject({ en: cvPath, id: cvPath }),
       links: z.strictObject({
         email: z.email(),
-        linkedin: z.url(),
-        github: z.url(),
+        linkedin: httpsUrl,
+        github: httpsUrl,
         whatsapp: z.string().regex(/^\d{8,15}$/).optional(),
-        instagram: z.url().optional(),
+        instagram: httpsUrl.optional(),
       }),
     }),
     ui: z.strictObject({
