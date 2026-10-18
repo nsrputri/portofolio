@@ -32,8 +32,8 @@ const { title, description } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title.en}</title>
     <meta name="description" content={description.en} />
-    <!-- Sets the stored language before first paint so there is no flash of English.
-         Duplicates resolveLang() in src/scripts/lang.ts: inline scripts cannot import. -->
+    {/* Sets the stored language before first paint so there is no flash of English.
+         Duplicates resolveLang() in src/scripts/lang.ts: inline scripts cannot import. */}
     <script is:inline>
       try {
         if (localStorage.getItem('lang') === 'id') document.documentElement.lang = 'id';
