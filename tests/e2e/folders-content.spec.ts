@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { containing, emphasised, plain, siteContent } from './helpers/content';
 import { gotoStatic, noHorizontalScroll } from './helpers/page';
+import { FIRST_SCREENS } from './helpers/viewports';
 
 const IDS = ['about', 'study', 'work', 'cert'] as const;
 const LANGS = ['en', 'id'] as const;
@@ -117,12 +118,7 @@ async function stackMetrics(page: Page) {
 // The first screen is the cover with the four closed folders stacked along its bottom edge, so
 // every tab has to be on screen without scrolling, in the longer Indonesian copy too.
 test.describe('cover and folder stack', () => {
-  for (const viewport of [
-    { width: 1280, height: 800 },
-    { width: 1366, height: 768 },
-    { width: 1440, height: 900 },
-    { width: 360, height: 780 },
-  ]) {
+  for (const viewport of FIRST_SCREENS) {
     for (const lang of LANGS) {
       test(`all four closed tabs fit the first screen at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {
         await page.setViewportSize(viewport);
@@ -145,6 +141,8 @@ test.describe('cover and folder stack', () => {
     { width: 1280, height: 800 },
     { width: 1000, height: 700 },
     { width: 900, height: 700 },
+    // The short windows, where the cover is tightest.
+    ...FIRST_SCREENS.filter((v) => v.width > 880 && v.height < 768),
   ]) {
     for (const lang of LANGS) {
       test(`note text stays above the first folder at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {

@@ -1,10 +1,16 @@
 import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import { plain, siteContent } from './helpers/content';
 import { measureContrast } from './helpers/contrast';
+import { FIRST_SCREENS, KEY_INFO_ONLY } from './helpers/viewports';
 
+/** Where the cover's look is checked: a full laptop and phone screen, and the shortest windows. */
 const VIEWPORTS = [
   { width: 1280, height: 800 },
   { width: 360, height: 780 },
+  { width: 1366, height: 657 },
+  { width: 1280, height: 650 },
+  { width: 390, height: 664 },
+  { width: 360, height: 640 },
 ] as const;
 
 const LANGS = ['en', 'id'] as const;
@@ -35,8 +41,10 @@ async function boxOf(locator: Locator) {
   return box;
 }
 
-for (const viewport of VIEWPORTS) {
-  test.describe(`cover at ${viewport.width}x${viewport.height}`, () => {
+// The name, the CV button and the status are what a recruiter came for, so they are on the first
+// screen in every window, the shortest included.
+for (const viewport of [...FIRST_SCREENS, ...KEY_INFO_ONLY]) {
+  test.describe(`cover key info at ${viewport.width}x${viewport.height}`, () => {
     test.use({ viewport });
 
     for (const lang of LANGS) {
@@ -58,7 +66,15 @@ for (const viewport of VIEWPORTS) {
         await expect(pieces.sticker).toContainText(site.name);
         await expect(pieces.status).toHaveText(site.status[lang], { useInnerText: true });
       });
+    }
+  });
+}
 
+for (const viewport of VIEWPORTS) {
+  test.describe(`cover at ${viewport.width}x${viewport.height}`, () => {
+    test.use({ viewport });
+
+    for (const lang of LANGS) {
       test(`toggle does not overlap corner label (${lang})`, async ({ page }) => {
         await openIn(page, lang);
         const toggle = await boxOf(page.locator('.lang-toggle'));
@@ -176,8 +192,9 @@ test.describe('cover decorations', () => {
     await expect(page.locator('.cover .note')).toBeVisible();
   });
 
-  // The Indonesian tagline is longer, so it is the one that would run under the collage.
-  for (const viewport of [VIEWPORTS[0], { width: 1366, height: 768 }, { width: 1440, height: 900 }, { width: 900, height: 700 }]) {
+  // The Indonesian tagline is longer, so it is the one that would run under the collage. The short
+  // windows are where the note, resting on the folders, comes closest to the tagline.
+  for (const viewport of [...FIRST_SCREENS.filter((v) => v.width > 880), { width: 900, height: 700 }]) {
     for (const lang of LANGS) {
       test.describe(`at ${viewport.width}x${viewport.height} in ${lang}`, () => {
         test.use({ viewport });

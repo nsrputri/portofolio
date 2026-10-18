@@ -64,7 +64,9 @@ const DECORATIVE_ALT = { en: '', id: '' };
   .cover {
     /* Space the fixed language toggle takes at the top right: 12px inset + 82px wide + a gap. */
     --toggle-clear: 108px;
-    --title-size: clamp(48px, 9vw, 128px);
+    /* Bounded by the height as well as the width: a laptop window loses 110-130px to the browser's own
+       bars, and a tagline sized by width alone would push the closed folder tabs off the first screen. */
+    --title-size: clamp(48px, min(9vw, 14vh), 128px);
     /* How far the note's bottom edge reaches below the top of the folder stack. The stack is 54px of
        empty tab row (with the folder's paper sheet starting 40px down) before its first opaque pixel,
        so the note can tuck in this far and still show every line. */
@@ -252,6 +254,15 @@ const DECORATIVE_ALT = { en: '', id: '' };
     border-radius: 50%;
     background: #7ee2a0;
     box-shadow: 0 0 0 3px rgba(126, 226, 160, 0.3);
+  }
+
+  /* A short window (a laptop with the browser's bars, a phone held upright) has no height to spare
+     above the tagline, so the gap under the corner labels shrinks to keep all four folder tabs on the
+     first screen. */
+  @media (max-height: 720px) {
+    .cover-title {
+      margin-top: clamp(14px, 3vh, 28px);
+    }
   }
 
   /* Too narrow for the note to sit beside the identity row. */

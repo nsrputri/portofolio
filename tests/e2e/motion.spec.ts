@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { gotoStatic, idle, openIds } from './helpers/page';
+import { FIRST_SCREENS } from './helpers/viewports';
 
 const IDS = ['about', 'study', 'work', 'cert'] as const;
 
@@ -252,13 +253,9 @@ test.describe('folder tabs as disclosure buttons', () => {
   });
 });
 
-// All four closed tabs must be on the first screen (the cover reserves room for the closed stack).
-for (const viewport of [
-  { width: 1280, height: 800 },
-  { width: 1366, height: 768 },
-  { width: 1440, height: 900 },
-  { width: 360, height: 780 },
-]) {
+// All four closed tabs must be on the first screen (the cover reserves room for the closed stack),
+// in the short windows too.
+for (const viewport of FIRST_SCREENS) {
   test.describe(`closed stack at ${viewport.width}x${viewport.height}`, () => {
     test.use({ viewport });
 
