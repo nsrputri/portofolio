@@ -156,7 +156,7 @@ test.describe('cover decorations', () => {
   });
 
   // The Indonesian tagline is longer, so it is the one that would run under the collage.
-  for (const viewport of [VIEWPORTS[0], { width: 900, height: 700 }]) {
+  for (const viewport of [VIEWPORTS[0], { width: 1366, height: 768 }, { width: 1440, height: 900 }, { width: 900, height: 700 }]) {
     for (const lang of LANGS) {
       test.describe(`at ${viewport.width}x${viewport.height} in ${lang}`, () => {
         test.use({ viewport });

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { gotoStatic, noHorizontalScroll } from './helpers/page';
 
 const IDS = ['about', 'study', 'work', 'cert'] as const;
@@ -10,6 +10,13 @@ const LABELS = {
 const LANGS = ['en', 'id'] as const;
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
+
+async function boxOf(locator: Locator) {
+  await expect(locator).toBeVisible();
+  const box = await locator.boundingBox();
+  if (!box) throw new Error('expected a bounding box');
+  return box;
+}
 
 test.describe('folder shell', () => {
   test('four folders in order with localized tabs', async ({ page }) => {
@@ -88,28 +95,97 @@ test.describe('folder shell', () => {
   }
 });
 
-// The closed stack lies over the bottom of the cover, so the cover has to leave the note room above it.
+/** Where the closed stack starts, and the sizes it is built from (custom properties holding clamp() are resolved with a probe). */
+async function stackMetrics(page: Page) {
+  return page.evaluate(() => {
+    const px = (value: string) => {
+      const probe = document.createElement('div');
+      probe.style.cssText = `position:absolute;visibility:hidden;height:${value}`;
+      document.body.append(probe);
+      const height = probe.getBoundingClientRect().height;
+      probe.remove();
+      return height;
+    };
+    return {
+      stackTop: document.querySelector('main.stack')!.getBoundingClientRect().top + window.scrollY,
+      band: px('var(--V)'),
+      tabHeight: px('var(--tab-h)'),
+      viewportHeight: window.innerHeight,
+    };
+  });
+}
+
+// The first screen is the cover with the four closed folders stacked along its bottom edge, so
+// every tab has to be on screen without scrolling, in the longer Indonesian copy too.
 test.describe('cover and folder stack', () => {
   for (const viewport of [
-    { width: 1920, height: 1080 },
-    { width: 1440, height: 900 },
     { width: 1280, height: 800 },
-    { width: 900, height: 700 },
-    { width: 681, height: 800 },
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 360, height: 780 },
   ]) {
     for (const lang of LANGS) {
-      test(`note ends above the first folder at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {
+      test(`all four closed tabs fit the first screen at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {
         await page.setViewportSize(viewport);
         await gotoStatic(page);
         if (lang === 'id') await idButton(page).click();
         await expect(page.locator('html')).toHaveAttribute('lang', lang);
-        const note = await page.locator('.cover .note').boundingBox();
-        const stack = await page.locator('main.stack').boundingBox();
-        expect(note, 'the note is shown at this width').not.toBeNull();
-        expect(note!.y + note!.height, 'note bottom to the top of the stack').toBeLessThanOrEqual(stack!.y);
+        const { stackTop, band, tabHeight, viewportHeight } = await stackMetrics(page);
+        // Closed folders are one band apart, so the fourth tab ends 3 bands and a tab below the stack top.
+        expect(stackTop + 3 * band + tabHeight, 'bottom of the fourth tab').toBeLessThanOrEqual(viewportHeight);
       });
     }
   }
+
+  // The note rests on the stack and may tuck a little behind the first folder, but never lose a line:
+  // the folder's paper sheet is the first opaque thing below the stack top, 14px above its body.
+  for (const viewport of [
+    { width: 1920, height: 1080 },
+    { width: 1440, height: 900 },
+    { width: 1366, height: 768 },
+    { width: 1280, height: 800 },
+    { width: 1000, height: 700 },
+    { width: 900, height: 700 },
+  ]) {
+    for (const lang of LANGS) {
+      test(`note text stays above the first folder at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {
+        await page.setViewportSize(viewport);
+        await gotoStatic(page);
+        if (lang === 'id') await idButton(page).click();
+        await expect(page.locator('html')).toHaveAttribute('lang', lang);
+        await expect(page.locator('.cover .note'), 'the note is shown at this width').toBeVisible();
+        const { stackTop, tabHeight } = await stackMetrics(page);
+        const textBottom = await page.evaluate(() => {
+          const text = [...document.querySelectorAll<HTMLElement>('.cover .note p [data-l]')].find((el) => el.offsetParent !== null)!;
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          return Math.max(...[...range.getClientRects()].map((rect) => rect.bottom));
+        });
+        expect(textBottom, 'last line of the note').toBeLessThanOrEqual(stackTop + tabHeight - 14);
+      });
+
+      test(`note leaves the identity row uncovered at ${viewport.width}x${viewport.height} (${lang})`, async ({ page }) => {
+        await page.setViewportSize(viewport);
+        await gotoStatic(page);
+        if (lang === 'id') await idButton(page).click();
+        await expect(page.locator('html')).toHaveAttribute('lang', lang);
+        const note = await boxOf(page.locator('.cover .note'));
+        for (const selector of ['.cover .sticker', '.cover .cv-link:visible', '.cover .status']) {
+          const box = await boxOf(page.locator(selector));
+          const overlaps = note.x < box.x + box.width && box.x < note.x + note.width && note.y < box.y + box.height && box.y < note.y + note.height;
+          expect(overlaps, `${selector} ${JSON.stringify(box)} vs note ${JSON.stringify(note)}`).toBe(false);
+        }
+      });
+    }
+  }
+
+  test('note gives way to the identity row on a narrow screen', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 900 });
+    await gotoStatic(page);
+    await expect(page.locator('.cover .note')).toHaveCount(1);
+    await expect(page.locator('.cover .note')).toBeHidden();
+    await expect(page.locator('.cover .status')).toBeVisible();
+  });
 });
 
 test.describe('about me', () => {
