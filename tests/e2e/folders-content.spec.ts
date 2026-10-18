@@ -402,6 +402,19 @@ test.describe('certificates', () => {
   });
 });
 
+/**
+ * Elements in the folders that reach past the right edge of the window. The page width alone only
+ * says that something sticks out; this also catches a box cut off by an ancestor that clips its
+ * overflow, and names the culprit.
+ */
+async function boxesPastTheRightEdge(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [...document.querySelectorAll('main.stack *')]
+      .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1)
+      .map((el) => `${el.tagName.toLowerCase()}.${el.className}`),
+  );
+}
+
 test.describe('on a phone (360px)', () => {
   test.use({ viewport: { width: 360, height: 780 } });
 
@@ -413,13 +426,24 @@ test.describe('on a phone (360px)', () => {
       await expect(page.locator('main.stack > section.folder')).toHaveCount(4);
 
       expect(await noHorizontalScroll(page)).toBe(true);
-      // <body> has overflow-x: clip, which hides overflow from scrollWidth, so the boxes are checked too.
-      const wide = await page.evaluate(() =>
-        [...document.querySelectorAll('main.stack *')]
-          .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1)
-          .map((el) => `${el.tagName.toLowerCase()}.${el.className}`),
-      );
-      expect(wide).toEqual([]);
+      expect(await boxesPastTheRightEdge(page)).toEqual([]);
+    });
+
+    // Real content can hold a string with no place to break (an e-mail address, a long compound word)
+    // where the dummy text has short words.
+    test(`a long unbroken fact or step title wraps instead of sticking out (${lang})`, async ({ page }) => {
+      await gotoStatic(page);
+      if (lang === 'id') await idButton(page).click();
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      const filled = await page.evaluate(() => {
+        const targets = document.querySelectorAll('#about .facts dd [data-l], #study .timeline b [data-l]');
+        for (const el of targets) el.textContent = 'nama.lengkap.mahasiswa@mail.ugm.example.ac.id';
+        return targets.length;
+      });
+      expect(filled, 'facts and step titles to fill').toBeGreaterThan(0);
+
+      expect(await noHorizontalScroll(page)).toBe(true);
+      expect(await boxesPastTheRightEdge(page)).toEqual([]);
     });
   }
 });

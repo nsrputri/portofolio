@@ -87,6 +87,8 @@ const columns = Math.min(study.items.length, 5);
     display: block;
     margin: 8px 0 6px;
     font-size: 16px;
+    /* A title with no place to break wraps instead of widening the card past a phone screen. */
+    overflow-wrap: anywhere;
   }
 
   .timeline p {

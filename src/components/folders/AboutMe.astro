@@ -67,6 +67,8 @@ const { about } = Astro.props;
     margin-top: 2px;
     font-size: 15px;
     font-weight: 500;
+    /* A value with no place to break (an e-mail address, a long word) wraps instead of sticking out. */
+    overflow-wrap: anywhere;
   }
 
   .chips {
