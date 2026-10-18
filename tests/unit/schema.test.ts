@@ -1,6 +1,12 @@
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { parseContent } from '../../src/data/schema';
+import { parseContent as parseWith } from '../../src/data/schema';
 import { content } from '../../src/data/content';
+
+// The fixtures check their CV and PDF paths against this folder instead of the real public/, so they
+// keep working whatever files the owner puts there. It holds cv/fixture.pdf and certificates/fixture.pdf.
+const FIXTURE_PUBLIC = fileURLToPath(new URL('../fixtures/public/', import.meta.url));
+const parseContent = (raw: unknown) => parseWith(raw, { publicDir: FIXTURE_PUBLIC });
 
 const img = { src: '/x.jpg', width: 1, height: 1, format: 'jpg' };
 const loc = (s: string) => ({ en: s, id: s });
@@ -23,7 +29,7 @@ function valid(): Fixture {
       thanks: loc('Thanks for stopping by.'),
       portrait: img,
       portraitAlt: loc('Portrait'),
-      cv: { en: '/cv/cv-en.pdf', id: '/cv/cv-id.pdf' },
+      cv: { en: '/cv/fixture.pdf', id: '/cv/fixture.pdf' },
       links: {
         email: 'me@example.com',
         linkedin: 'https://linkedin.com/in/me',
@@ -210,9 +216,64 @@ describe('parseContent', () => {
   });
 });
 
+describe('files under public/', () => {
+  it('accepts a CV and a certificate PDF that exist', () => {
+    const raw = mutated((c) => {
+      c.certificates.items[0].pdf = '/certificates/fixture.pdf';
+    });
+    expect(() => parseContent(raw)).not.toThrow();
+  });
+
+  it('rejects a CV path whose file is missing, naming the field and the file', () => {
+    const raw = mutated((c) => {
+      c.site.cv.en = '/cv/CV-Nisrina-EN.pdf';
+    });
+    expect(() => parseContent(raw)).toThrow(/^Invalid content:/);
+    expect(() => parseContent(raw)).toThrow(
+      '- site.cv.en: file not found in public/ (looked for public/cv/CV-Nisrina-EN.pdf)',
+    );
+  });
+
+  it('rejects a certificate PDF whose file is missing', () => {
+    const raw = mutated((c) => {
+      c.certificates.items[0].pdf = '/certificates/mtcna.pdf';
+    });
+    expect(() => parseContent(raw)).toThrow(
+      '- certificates.items.0.pdf: file not found in public/ (looked for public/certificates/mtcna.pdf)',
+    );
+  });
+
+  // Windows would find Fixture.pdf for fixture.pdf; the Linux build server and the host would not.
+  it('compares file names case-sensitively', () => {
+    const raw = mutated((c) => {
+      c.site.cv.id = '/cv/Fixture.pdf';
+    });
+    expect(() => parseContent(raw)).toThrow(/- site\.cv\.id: file not found in public\//);
+  });
+
+  it('reports a malformed path once, without a second "not found" line', () => {
+    const raw = mutated((c) => {
+      c.site.cv.en = '/files/cv.docx';
+    });
+    expect(() => parseContent(raw)).toThrow(/- site\.cv\.en: /);
+    expect(() => parseContent(raw)).not.toThrow(/not found/);
+  });
+
+  it('checks the real public/ folder when no folder is given', () => {
+    const real = mutated((c) => {
+      c.site.cv = { ...content.site.cv };
+    });
+    expect(() => parseWith(real)).not.toThrow();
+    const missing = mutated((c) => {
+      c.site.cv.en = '/cv/definitely-not-here.pdf';
+    });
+    expect(() => parseWith(missing)).toThrow(/- site\.cv\.en: file not found in public\//);
+  });
+});
+
 describe('dummy content', () => {
   it('parses and has the expected shape', () => {
-    expect(() => parseContent(content)).not.toThrow();
+    expect(() => parseWith(content)).not.toThrow();
     expect(content.work.items).toHaveLength(4);
     expect(content.certificates.items).toHaveLength(4);
     expect(content.about.facts).toHaveLength(4);
