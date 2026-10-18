@@ -97,7 +97,8 @@ export function initFolders(doc: Document): void {
     .filter((folder): folder is Folder => folder !== null);
   const firstFolder = folders[0];
   const lastFolder = folders[folders.length - 1];
-  if (!firstFolder || !lastFolder) return;
+  const stack = lastFolder?.el.parentElement;
+  if (!firstFolder || !lastFolder || !stack) return;
   const about: Folder = firstFolder;
   const last: Folder = lastFolder;
 
@@ -106,9 +107,11 @@ export function initFolders(doc: Document): void {
   // Height of a closed folder body, read from CSS so it follows --V when the window resizes.
   const probe = doc.createElement('div');
   probe.style.cssText = 'position:absolute;top:0;left:0;width:0;height:calc(var(--V) + 20px);visibility:hidden';
-  // Room at the end of the page, so even the last folder can be scrolled up past the line (see measure()).
+  // Room so even the last folder can be scrolled up past the line (see measure()). It goes right under
+  // the stack, above the footer, so the footer ends the page and no blank strip follows it.
   const room = doc.createElement('div');
-  doc.body.append(probe, room);
+  doc.body.append(probe);
+  stack.after(room);
 
   let line = 0;
   let running: gsap.core.Timeline | null = null;
@@ -201,10 +204,11 @@ export function initFolders(doc: Document): void {
   }
 
   /**
-   * Places the line, and sizes the room at the end of the page. A folder opens only once its top is
-   * above the line, so the page has to go on for (viewport − line) below the top of the last folder
-   * while it is closed, or the last folder could never open by scrolling. Whatever follows the stack
-   * counts towards that; the room makes up the rest, plus GAP so the top can rise clearly past the line.
+   * Places the line, and sizes the room under the stack. A folder opens only once its top is above
+   * the line, so the page has to go on for (viewport − line) below the top of the last folder while
+   * it is closed, or the last folder could never open by scrolling. Whatever follows the stack (the
+   * footer) counts towards that; the room makes up the rest, plus GAP so the top can rise clearly
+   * past the line. A footer tall enough on its own leaves the room empty.
    */
   function measure() {
     const vh = win.innerHeight;
@@ -212,7 +216,9 @@ export function initFolders(doc: Document): void {
     root.setAttribute('data-folders-line', String(line));
 
     const closedLast = last.el.offsetHeight - last.body.offsetHeight + probe.offsetHeight;
-    const after = room.getBoundingClientRect().top - last.el.getBoundingClientRect().bottom;
+    // What follows the last folder besides the room itself, i.e. the footer.
+    const lastBottom = last.el.getBoundingClientRect().bottom + win.scrollY;
+    const after = doc.body.getBoundingClientRect().bottom + win.scrollY - lastBottom - room.offsetHeight;
     const missing = vh - line + GAP - closedLast - after;
     room.style.height = missing > 0 ? `${Math.ceil(missing)}px` : '';
   }

@@ -1,0 +1,90 @@
+---
+import type { SiteContent } from '../data/schema';
+import CvLinks from './CvLinks.astro';
+import T from './T.astro';
+import Sticker from './decor/Sticker.astro';
+
+interface Props {
+  site: SiteContent['site'];
+  ui: SiteContent['ui'];
+}
+
+const { site, ui } = Astro.props;
+const { links } = site;
+// Links that open another site. Email stays in the same tab, since it opens the mail app.
+const external = [
+  { name: 'LinkedIn', href: links.linkedin },
+  { name: 'GitHub', href: links.github },
+  // WhatsApp and Instagram are optional: an unset one leaves no link and no gap.
+  ...(links.whatsapp ? [{ name: 'WhatsApp', href: `https://wa.me/${links.whatsapp}` }] : []),
+  ...(links.instagram ? [{ name: 'Instagram', href: links.instagram }] : []),
+];
+---
+
+<footer class="foot">
+  <Sticker name={site.name} sub={site.stickerSub} size="lg" />
+  <div class="foot-txt">
+    <p class="foot-url">{Astro.site?.host}</p>
+    <p class="foot-thanks"><T text={site.thanks} /></p>
+    <ul class="links">
+      <li><a href={`mailto:${links.email}`}>Email</a></li>
+      {
+        external.map((link) => (
+          <li>
+            <a href={link.href} target="_blank" rel="noopener">
+              {link.name}
+            </a>
+          </li>
+        ))
+      }
+      <li><CvLinks cv={site.cv} label={ui.downloadCv} /></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 28px 48px;
+    padding: clamp(56px, 9vw, 110px) var(--gutter) clamp(48px, 7vw, 96px);
+  }
+
+  .foot-url {
+    font: 600 15px var(--mono);
+  }
+
+  .foot-thanks {
+    margin-top: 8px;
+    max-width: 52ch;
+    line-height: 1.6;
+  }
+
+  .links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* Also reaches the CV links, which CvLinks renders without styles of their own. */
+  .links :global(a) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    text-decoration: none;
+    font: 500 12.5px var(--mono);
+    letter-spacing: 0.06em;
+  }
+
+  .links :global(a:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+  }
+</style>

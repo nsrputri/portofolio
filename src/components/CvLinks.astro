@@ -1,0 +1,20 @@
+---
+import type { Localized, SiteContent } from '../data/schema';
+
+interface Props {
+  cv: SiteContent['site']['cv'];
+  /** Link text, "Download CV" in both languages. */
+  label: Localized;
+}
+
+const { cv, label } = Astro.props;
+---
+
+{/* One link per language; the shared rule on [data-l] in global.css shows the one for <html lang>,
+     so the visitor gets the CV in the language they read the page in. The parent styles the pair. */}
+<a class="cv-link" data-l="en" lang="en" href={cv.en} download>
+  {label.en} <span aria-hidden="true">↓</span>
+</a>
+<a class="cv-link" data-l="id" lang="id" href={cv.id} download>
+  {label.id} <span aria-hidden="true">↓</span>
+</a>

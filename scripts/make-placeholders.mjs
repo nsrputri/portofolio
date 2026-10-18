@@ -1,7 +1,9 @@
 // Generates the dummy assets the site ships with until real content replaces them:
 //   src/assets/placeholders/*.jpg   labelled placeholder photos and certificate scans
-//   public/cv/cv-en.pdf, cv-id.pdf  minimal one-page PDFs
-// Run with `npm run placeholders`. Output is committed.
+//   public/cv/cv-en.pdf, cv-id.pdf  minimal one-page PDFs, only when the file is missing
+// Run with `npm run placeholders`. Output is committed. The CV PDFs are never overwritten, so the real
+// ones survive a re-run; the images are rewritten every time, so keep real photos under other names.
+import { existsSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -93,7 +95,19 @@ for (const { file, ...spec } of images) {
     .toFile(join(imageDir, file));
 }
 
-await writeFile(join(cvDir, 'cv-en.pdf'), minimalPdf('Placeholder CV (English) - replace me'));
-await writeFile(join(cvDir, 'cv-id.pdf'), minimalPdf('CV contoh (Indonesia) - ganti aku'));
+const cvs = [
+  { file: 'cv-en.pdf', text: 'Placeholder CV (English) - replace me' },
+  { file: 'cv-id.pdf', text: 'CV contoh (Indonesia) - ganti aku' },
+];
+let wrotePdfs = 0;
+for (const { file, text } of cvs) {
+  const path = join(cvDir, file);
+  if (existsSync(path)) {
+    console.log(`Kept public/cv/${file}: it already exists, so it was not overwritten`);
+    continue;
+  }
+  await writeFile(path, minimalPdf(text));
+  wrotePdfs++;
+}
 
-console.log(`Wrote ${images.length} images to src/assets/placeholders and 2 PDFs to public/cv`);
+console.log(`Wrote ${images.length} images to src/assets/placeholders; new PDFs in public/cv: ${wrotePdfs}`);

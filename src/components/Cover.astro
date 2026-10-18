@@ -1,6 +1,7 @@
 ---
 import type { SiteContent } from '../data/schema';
 import BiImage from './BiImage.astro';
+import CvLinks from './CvLinks.astro';
 import Polaroid from './Polaroid.astro';
 import T from './T.astro';
 import Flower from './decor/Flower.astro';
@@ -54,12 +55,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
 
   <div class="cover-id">
     <Sticker name={site.name} sub={site.stickerSub} />
-    <a class="btn cv-link" data-l="en" lang="en" href={site.cv.en} download>
-      {ui.downloadCv.en} <span aria-hidden="true">↓</span>
-    </a>
-    <a class="btn cv-link" data-l="id" lang="id" href={site.cv.id} download>
-      {ui.downloadCv.id} <span aria-hidden="true">↓</span>
-    </a>
+    <CvLinks cv={site.cv} label={ui.downloadCv} />
     <span class="status"><i aria-hidden="true"></i><T text={site.status} /></span>
   </div>
 </header>
@@ -217,7 +213,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
     gap: 12px 16px;
   }
 
-  .btn {
+  /* The links come from CvLinks, so this scope cannot reach them without :global. */
+  .cover-id :global(.cv-link) {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -231,7 +228,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
     letter-spacing: 0.08em;
   }
 
-  .btn:focus-visible {
+  .cover-id :global(.cv-link:focus-visible) {
     outline: 2px solid #fff;
     outline-offset: 3px;
   }
