@@ -21,3 +21,169 @@ html:not([lang="id"]) [data-l="id"],
 html[lang="id"] [data-l="en"] {
   display: none !important;
 }
+
+/* ---------- the stack of folders ---------- */
+
+/* On :root rather than .stack because the cover reserves --stack-h at its bottom, so the closed stack
+   can sit on top of it. --V is the band each closed folder shows, --overlap how far a folder slides
+   over the one above, and the stack is four folders tall. */
+:root {
+  --V: clamp(72px, 10.5vh, 108px);
+  --overlap: calc(var(--tab-h) + 20px);
+  --stack-h: calc(4 * var(--V) + var(--overlap));
+}
+
+.stack {
+  position: relative;
+  margin-top: calc(-1 * var(--stack-h));
+}
+
+.folder {
+  position: relative;
+  --c: var(--beige);
+  /* The mockup's --muted is about 3.5:1 on the pink and cream paper, short of the 4.5:1 small text needs. */
+  --muted: #57524c;
+}
+
+.folder + .folder {
+  margin-top: calc(-1 * var(--overlap));
+}
+
+.folder-tabrow {
+  position: relative;
+  height: var(--tab-h);
+}
+
+.folder-tab {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  position: absolute;
+  bottom: -1px;
+  height: calc(var(--tab-h) + 1px);
+  min-width: min(46%, 380px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 clamp(18px, 3vw, 34px);
+  background: var(--c);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -10px 22px -14px rgba(0, 0, 0, 0.35);
+  font: 500 clamp(12.5px, 1.15vw, 15px) var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.folder-tab .no {
+  font-size: 0.82em;
+  color: var(--muted);
+}
+
+.folder-tab:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -6px;
+}
+
+/* The tab flares out into the folder with two inverse (concave) corners. */
+.folder-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 26px;
+  height: 26px;
+}
+
+.folder[data-tab='left'] .folder-tab {
+  left: 0;
+}
+
+.folder[data-tab='left'] .folder-tab::after {
+  right: -26px;
+  background: radial-gradient(circle at 100% 0, transparent 25.5px, var(--c) 26px);
+}
+
+.folder[data-tab='right'] .folder-tab {
+  right: 0;
+  flex-direction: row-reverse;
+}
+
+.folder[data-tab='right'] .folder-tab::after {
+  left: -26px;
+  background: radial-gradient(circle at 0 0, transparent 25.5px, var(--c) 26px);
+}
+
+/* A sheet of paper sticking out of the folder, on the side opposite the tab. */
+.folder-tabrow::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  height: 44px;
+  width: 40%;
+  background: var(--paper);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -4px 12px -6px rgba(0, 0, 0, 0.18);
+}
+
+.folder[data-tab='left'] .folder-tabrow::after {
+  right: 6%;
+}
+
+.folder[data-tab='right'] .folder-tabrow::after {
+  left: 6%;
+}
+
+.folder-body {
+  position: relative;
+  background: var(--c);
+  border-radius: 28px;
+  padding: clamp(24px, 3.4vw, 44px) var(--gutter) 0;
+  box-shadow: 0 -10px 22px -16px rgba(0, 0, 0, 0.3);
+}
+
+.folder[data-tab='left'] .folder-body {
+  border-top-left-radius: 0;
+}
+
+.folder[data-tab='right'] .folder-body {
+  border-top-right-radius: 0;
+}
+
+/* Room at the bottom so the next folder's tab, which overlaps this one, never covers the content. */
+.folder-content {
+  position: relative;
+  padding-bottom: calc(var(--overlap) + 48px);
+}
+
+/* ---------- type shared by the folder contents ---------- */
+
+.kicker {
+  margin-bottom: 12px;
+  font: 500 12.5px var(--mono);
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.h-serif {
+  max-width: 20ch;
+  font: 400 clamp(30px, 4vw, 54px) / 1.02 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.h-serif em {
+  font-style: italic;
+}
+
+.body-txt {
+  margin-top: 16px;
+  max-width: 56ch;
+  font-size: clamp(15px, 1.1vw, 17px);
+  line-height: 1.6;
+  color: #3d3a36;
+}
+
+@media (max-width: 600px) {
+  .folder-tabrow::after {
+    width: 28%;
+  }
+}

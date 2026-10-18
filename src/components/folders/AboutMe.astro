@@ -1,0 +1,106 @@
+---
+import type { SiteContent } from '../../data/schema';
+import Polaroid from '../Polaroid.astro';
+import T from '../T.astro';
+import Cassette from '../decor/Cassette.astro';
+
+interface Props {
+  about: SiteContent['about'];
+}
+
+const { about } = Astro.props;
+---
+
+<div class="about">
+  <Polaroid class="about-pol pop" src={about.photo} alt={about.photoAlt} caption={about.caption} tape />
+  <div>
+    <p class="kicker"><T text={about.kicker} /></p>
+    <h2 class="h-serif"><T text={about.heading} rich /></h2>
+    <p class="body-txt"><T text={about.intro} /></p>
+    <dl class="facts">
+      {
+        about.facts.map(({ label, value }) => (
+          <div>
+            <dt><T text={label} /></dt>
+            <dd><T text={value} /></dd>
+          </div>
+        ))
+      }
+    </dl>
+    <ul class="chips">
+      {about.skills.map((skill) => <li>{skill}</li>)}
+    </ul>
+  </div>
+  <Cassette class="pop" song={about.song} />
+</div>
+
+<style>
+  .about {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(150px, 230px) 1fr;
+    gap: clamp(24px, 4vw, 60px);
+    align-items: start;
+  }
+
+  .about :global(.about-pol) {
+    margin-top: 10px;
+    rotate: -3deg;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 28px;
+    max-width: 520px;
+    margin-top: 24px;
+  }
+
+  .facts dt {
+    font: 500 10.5px var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .facts dd {
+    margin-top: 2px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .chips li {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    font: 500 12px var(--mono);
+    letter-spacing: 0.04em;
+  }
+
+  /* The cassette is pinned to the bottom right corner (see Cassette.astro, which hides it below this
+     width), so the chips wrap before they reach it instead of running underneath. */
+  @media (min-width: 981px) {
+    .chips {
+      padding-right: 200px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .about {
+      grid-template-columns: 1fr;
+    }
+
+    .about :global(.about-pol) {
+      width: 180px;
+    }
+  }
+</style>

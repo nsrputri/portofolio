@@ -69,10 +69,23 @@ const DECORATIVE_ALT = { en: '', id: '' };
     /* Space the fixed language toggle takes at the top right: 12px inset + 82px wide + a gap. */
     --toggle-clear: 108px;
     --title-size: clamp(48px, 9vw, 128px);
+    /* The mockup's offset, but never above the tagline's bottom edge (padding, corner row, title
+       margin and two lines of title) plus 44px: the paperclip sticks 26px out of the note and the
+       tagline's descenders hang below its line box. A longer Indonesian tagline would otherwise run
+       under the note. */
+    --note-top: max(
+      clamp(190px, 30vh, 300px),
+      calc(60px + clamp(28px, 7vh, 72px) + 1.76 * var(--title-size) + 44px)
+    );
+    /* The note is about 158px tall at every width (its font and its width scale together), plus the
+       13px its tilt adds, so this is what it needs to end above the folder stack. */
+    --note-room: 176px;
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    min-height: 100svh;
+    /* The stack lies over the bottom of the cover. On a short window the note would end up behind
+       its first folder, so the cover grows until the note clears it. */
+    min-height: max(100svh, calc(var(--note-top) + var(--note-room) + var(--stack-h, 0px)));
     display: flex;
     flex-direction: column;
     padding: 24px var(--gutter) var(--stack-h, 0px);
@@ -183,14 +196,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
   .note {
     position: absolute;
     z-index: 2;
-    /* The mockup's offset, but never above the tagline's bottom edge (padding, corner row, title
-       margin and two lines of title) plus 44px: the paperclip sticks 26px out of the note and the
-       tagline's descenders hang below its line box. A longer Indonesian tagline would otherwise run
-       under the note. */
-    top: max(
-      clamp(190px, 30vh, 300px),
-      calc(60px + clamp(28px, 7vh, 72px) + 1.76 * var(--title-size) + 44px)
-    );
+    top: var(--note-top);
     right: clamp(120px, 17vw, 270px);
     width: clamp(180px, 19vw, 270px);
     padding: 30px 18px 18px;
@@ -257,6 +263,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
     .cover {
       /* No room beside the corner labels, so the row sits below the toggle instead. */
       padding-top: 56px;
+      /* The note is hidden here, so there is nothing to make room for. */
+      min-height: 100svh;
     }
 
     .cover-corners {

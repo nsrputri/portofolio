@@ -1,11 +1,27 @@
 ---
 import Base from '../layouts/Base.astro';
 import Cover from '../components/Cover.astro';
+import Folder from '../components/Folder.astro';
 import LangToggle from '../components/LangToggle.astro';
+import AboutMe from '../components/folders/AboutMe.astro';
+import StudyJourney from '../components/folders/StudyJourney.astro';
 import { content } from '../data/content';
+
+const { folders } = content.ui;
 ---
 
 <Base title={content.site.title} description={content.site.description}>
   <LangToggle label={content.ui.language} />
   <Cover site={content.site} ui={content.ui} />
+  <main class="stack">
+    <Folder id="about" no={1} label={folders.about} color="pink" tab="left">
+      <AboutMe about={content.about} />
+    </Folder>
+    <Folder id="study" no={2} label={folders.study} color="beige" tab="right">
+      <StudyJourney study={content.study} />
+    </Folder>
+    {/* Empty shells: the What I Do and Certificates contents go in these two. */}
+    <Folder id="work" no={3} label={folders.work} color="blue" tab="left" />
+    <Folder id="cert" no={4} label={folders.cert} color="butter" tab="right" />
+  </main>
 </Base>

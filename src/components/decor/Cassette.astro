@@ -1,0 +1,66 @@
+---
+interface Props {
+  /** Title shown on the label. Plain text: a song name is not translated. */
+  song: string;
+  class?: string;
+}
+
+const { song, class: className } = Astro.props;
+---
+
+<div class:list={['cassette', className]} aria-hidden="true">
+  {/* "now playing" is decoration, kept in English in both languages. */}
+  <span class="cas-label">now playing ♪ {song}</span>
+  <span class="reels"><i></i><i></i></span>
+</div>
+
+<style>
+  .cassette {
+    position: absolute;
+    right: 0;
+    bottom: -8px;
+    width: 176px;
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 1.5px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+    rotate: 7deg;
+  }
+
+  .cas-label {
+    display: block;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: #f6f3ec;
+    font: 500 10px var(--mono);
+    color: #57534e;
+  }
+
+  .reels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 118px;
+    height: 40px;
+    margin: 12px auto 2px;
+    padding: 0 8px;
+    border-radius: 20px;
+    background: rgba(45, 45, 45, 0.7);
+  }
+
+  .reels i {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #fff;
+    border: 6px dotted #b8b8b8;
+  }
+
+  /* Below this width there is no free corner left for it. */
+  @media (max-width: 980px) {
+    .cassette {
+      display: none;
+    }
+  }
+</style>

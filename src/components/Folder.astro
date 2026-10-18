@@ -1,0 +1,29 @@
+---
+import type { Localized } from '../data/schema';
+import T from './T.astro';
+
+interface Props {
+  id: string;
+  /** Position in the stack, from 1. Shown as "01" on the tab and stored as `data-index` (from 0). */
+  no: number;
+  label: Localized;
+  /** Paper colour, one of the palette tokens in tokens.css. */
+  color: 'pink' | 'beige' | 'blue' | 'butter';
+  /** Which side the tab sticks out on. */
+  tab: 'left' | 'right';
+}
+
+const { id, no, label, color, tab } = Astro.props;
+---
+
+<section class="folder" id={id} data-index={no - 1} data-tab={tab} style={`--c:var(--${color})`}>
+  <div class="folder-tabrow">
+    <button class="folder-tab" type="button">
+      <span class="no" aria-hidden="true">{String(no).padStart(2, '0')}</span>
+      <T text={label} />
+    </button>
+  </div>
+  <div class="folder-body">
+    <div class="folder-content"><slot /></div>
+  </div>
+</section>

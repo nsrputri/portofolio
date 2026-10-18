@@ -1,0 +1,118 @@
+---
+import type { SiteContent } from '../../data/schema';
+import T from '../T.astro';
+
+interface Props {
+  study: SiteContent['study'];
+}
+
+const { study } = Astro.props;
+// One row up to five steps; a longer journey wraps onto further rows.
+const columns = Math.min(study.items.length, 5);
+---
+
+<div class="study">
+  <p class="kicker"><T text={study.kicker} /></p>
+  <h2 class="h-serif"><T text={study.heading} rich /></h2>
+  <ol class="timeline" style={`--columns:${columns}`}>
+    {
+      study.items.map((item) => (
+        <li class:list={['pop', { now: item.current }]} aria-current={item.current ? 'step' : undefined}>
+          <span class="when"><T text={item.when} /></span>
+          <b><T text={item.title} /></b>
+          <p><T text={item.text} /></p>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .timeline {
+    list-style: none;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--columns, 5), minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 36px;
+  }
+
+  /* The dashed string the cards hang from. */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 22px;
+    border-top: 2px dashed rgba(60, 30, 30, 0.28);
+  }
+
+  .timeline li {
+    position: relative;
+    padding: 34px 16px 18px;
+    border-radius: 6px;
+    background: var(--paper);
+    box-shadow: 0 10px 22px rgba(70, 30, 30, 0.1);
+  }
+
+  .timeline li:nth-child(odd) {
+    rotate: -1.4deg;
+  }
+
+  .timeline li:nth-child(even) {
+    rotate: 1.2deg;
+  }
+
+  /* The pin holding each card to the string. */
+  .timeline li::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--red);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .when {
+    display: block;
+    font: 600 21px / 1 var(--hand);
+    /* Darker than --red, which is 4.2:1 on the paper and this is small text. */
+    color: #b3352d;
+  }
+
+  .timeline b {
+    display: block;
+    margin: 8px 0 6px;
+    font-size: 16px;
+  }
+
+  .timeline p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b4743;
+  }
+
+  .timeline .now {
+    outline: 2px dashed var(--red);
+    outline-offset: 4px;
+  }
+
+  @media (max-width: 980px) {
+    .timeline {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timeline::before {
+      display: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .timeline {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
