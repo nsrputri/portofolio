@@ -1,0 +1,78 @@
+---
+import type { Localized } from '../data/schema';
+import BiImage from './BiImage.astro';
+import T from './T.astro';
+
+interface Props {
+  src: ImageMetadata;
+  alt: Localized;
+  caption?: Localized;
+  /** Round metal pin at the top edge. */
+  pin?: boolean;
+  /** Strip of tape at the top edge. */
+  tape?: boolean;
+  class?: string;
+}
+
+const { src, alt, caption, pin = false, tape = false, class: className } = Astro.props;
+---
+
+<figure class:list={['polaroid', { 'polaroid--bare': !caption }, className]}>
+  {pin && <span class="pin" aria-hidden="true" />}
+  {tape && <span class="tape" aria-hidden="true" />}
+  <BiImage src={src} alt={alt} widths={[240, 480]} sizes="240px" />
+  {caption && <figcaption><T text={caption} /></figcaption>}
+</figure>
+
+<style>
+  .polaroid {
+    position: relative;
+    background: #fff;
+    padding: 10px 10px 0;
+    box-shadow: 0 14px 30px rgba(40, 30, 20, 0.2);
+  }
+
+  /* A caption gives the bottom margin; without one the frame needs its own. */
+  .polaroid--bare {
+    padding-bottom: 26px;
+  }
+
+  .polaroid :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .polaroid figcaption {
+    padding: 10px 0 12px;
+    font: 600 21px/1 var(--hand);
+    color: #4a4642;
+    text-align: center;
+  }
+
+  .pin {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 2;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff 0 18%, #b9bec4 40%, #7d838a 100%);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .tape {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    translate: -50% 0;
+    rotate: -4deg;
+    width: 84px;
+    height: 24px;
+    background: rgba(226, 205, 140, 0.7);
+  }
+</style>

@@ -17,6 +17,7 @@ import { parseContent, type SiteContent } from './schema';
 export const content: SiteContent = parseContent({
   site: {
     name: 'NAMA KAMU',
+    stickerSub: 'TRI · DTEDI · UGM',
     title: {
       en: 'Your Name · Internet Engineering Portfolio',
       id: 'Nama Kamu · Portofolio Teknologi Rekayasa Internet',

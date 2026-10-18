@@ -1,0 +1,272 @@
+---
+import type { SiteContent } from '../data/schema';
+import BiImage from './BiImage.astro';
+import Polaroid from './Polaroid.astro';
+import T from './T.astro';
+import Flower from './decor/Flower.astro';
+import Paperclip from './decor/Paperclip.astro';
+import Sticker from './decor/Sticker.astro';
+
+interface Props {
+  site: SiteContent['site'];
+  ui: SiteContent['ui'];
+}
+
+const { site, ui } = Astro.props;
+const { coverPhoto } = site;
+// The photo is a backdrop, so its alt text is empty in both languages.
+const DECORATIVE_ALT = { en: '', id: '' };
+---
+
+<header class:list={['cover', { 'cover--fallback': !coverPhoto }]}>
+  <div class="cover-bg">
+    {
+      coverPhoto && (
+        <BiImage
+          src={coverPhoto}
+          alt={DECORATIVE_ALT}
+          loading="eager"
+          fetchpriority="high"
+          widths={[640, 1280, 1920]}
+          sizes="100vw"
+        />
+      )
+    }
+  </div>
+
+  <div class="cover-corners">
+    <p class="cover-corner cover-corner--left"><T text={site.cornerLeft} rich /></p>
+    <p class="cover-corner cover-corner--right"><T text={site.cornerRight} rich /></p>
+  </div>
+
+  <span class="fl fl-1"><Flower /></span>
+  <span class="fl fl-2"><Flower /></span>
+  <span class="fl fl-3"><Flower /></span>
+
+  <h1 class="cover-title"><T text={site.tagline} rich /></h1>
+
+  <Polaroid class="cover-pol" src={site.portrait} alt={site.portraitAlt} pin />
+
+  <div class="note">
+    <Paperclip />
+    <p><T text={site.note} /></p>
+  </div>
+
+  <div class="cover-id">
+    <Sticker name={site.name} sub={site.stickerSub} />
+    <a class="btn cv-link" data-l="en" lang="en" href={site.cv.en} download>
+      {ui.downloadCv.en} <span aria-hidden="true">↓</span>
+    </a>
+    <a class="btn cv-link" data-l="id" lang="id" href={site.cv.id} download>
+      {ui.downloadCv.id} <span aria-hidden="true">↓</span>
+    </a>
+    <span class="status"><i aria-hidden="true"></i><T text={site.status} /></span>
+  </div>
+</header>
+
+<style>
+  .cover {
+    /* Space the fixed language toggle takes at the top right: 12px inset + 82px wide + a gap. */
+    --toggle-clear: 108px;
+    --title-size: clamp(48px, 9vw, 128px);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px var(--gutter) var(--stack-h, 0px);
+    color: #fff;
+  }
+
+  .cover-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  .cover-bg :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Darkens a real photo so the white text keeps its contrast. */
+  .cover:not(.cover--fallback) .cover-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(18, 15, 12, 0.55),
+      rgba(18, 15, 12, 0.4) 45%,
+      rgba(18, 15, 12, 0.65)
+    );
+  }
+
+  .cover--fallback .cover-bg {
+    background:
+      radial-gradient(55% 45% at 88% 8%, #56664a 0%, transparent 70%),
+      radial-gradient(40% 40% at 8% 22%, #8c7a66 0%, transparent 72%),
+      radial-gradient(60% 50% at 40% 70%, #b7ae9d 0%, transparent 70%),
+      linear-gradient(180deg, #7a7d6c 0%, #a39b8b 100%);
+  }
+
+  .cover-corners {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-right: var(--toggle-clear);
+    font: 500 clamp(11px, 1vw, 13px) / 1.4 var(--mono);
+    letter-spacing: 0.14em;
+  }
+
+  .cover-corner--right {
+    text-align: right;
+  }
+
+  .cover-title {
+    margin: clamp(28px, 7vh, 72px) 0 0 clamp(0px, 14vw, 230px);
+    font: 400 var(--title-size) / 0.88 var(--serif);
+    letter-spacing: -0.015em;
+  }
+
+  .cover-title :global(em) {
+    font-style: italic;
+  }
+
+  .fl {
+    position: absolute;
+    width: clamp(26px, 2.6vw, 38px);
+    color: #fff;
+    opacity: 0.9;
+  }
+
+  .fl-1 {
+    top: 14%;
+    left: 22%;
+    rotate: 12deg;
+  }
+
+  .fl-2 {
+    top: 27%;
+    left: 14%;
+    rotate: -20deg;
+    width: clamp(20px, 2vw, 30px);
+  }
+
+  .fl-3 {
+    top: 9%;
+    right: 34%;
+  }
+
+  .cover :global(.cover-pol) {
+    position: absolute;
+    z-index: 2;
+    top: clamp(96px, 15vh, 160px);
+    right: clamp(16px, 5vw, 80px);
+    width: clamp(120px, 14vw, 196px);
+    rotate: 5deg;
+  }
+
+  .note {
+    position: absolute;
+    z-index: 2;
+    /* The mockup's offset, but never above the tagline's bottom edge (padding, corner row, title
+       margin and two lines of title). A longer Indonesian tagline would otherwise run under the note. */
+    top: max(
+      clamp(190px, 30vh, 300px),
+      calc(60px + clamp(28px, 7vh, 72px) + 1.76 * var(--title-size) + 16px)
+    );
+    right: clamp(120px, 17vw, 270px);
+    width: clamp(180px, 19vw, 270px);
+    padding: 30px 18px 18px;
+    rotate: -3deg;
+    background: var(--paper);
+    color: #33302d;
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+  }
+
+  .note p {
+    font: 500 clamp(19px, 1.6vw, 24px) / 1.15 var(--hand);
+  }
+
+  .cover-id {
+    margin-top: auto;
+    padding: 22px 0 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: #1f1e1c;
+    color: #fff;
+    text-decoration: none;
+    font: 500 13px var(--mono);
+    letter-spacing: 0.08em;
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
+    font: 500 12px var(--mono);
+    letter-spacing: 0.08em;
+  }
+
+  .status i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7ee2a0;
+    box-shadow: 0 0 0 3px rgba(126, 226, 160, 0.3);
+  }
+
+  @media (max-width: 680px) {
+    .cover {
+      /* No room beside the corner labels, so the row sits below the toggle instead. */
+      padding-top: 56px;
+    }
+
+    .cover-corners {
+      padding-right: 0;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    .cover :global(.cover-pol),
+    .note,
+    .fl-3 {
+      display: none;
+    }
+
+    .cover-title {
+      margin-left: 0;
+    }
+
+    /* Moves clear of the tagline, which now starts at the left edge. */
+    .fl-2 {
+      top: 25%;
+      left: auto;
+      right: 12%;
+    }
+  }
+</style>

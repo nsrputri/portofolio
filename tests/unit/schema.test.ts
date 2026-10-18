@@ -12,6 +12,7 @@ function valid(): Fixture {
   return {
     site: {
       name: 'NAMA KAMU',
+      stickerSub: 'TRI · DTEDI · UGM',
       title: loc('Portfolio'),
       description: loc('A portfolio.'),
       cornerLeft: loc('PORTFOLIO 2026'),
@@ -158,6 +159,40 @@ describe('parseContent', () => {
     expect(() => parseContent(badYear)).toThrow(/certificates\.items\.0\.year/);
   });
 
+  it('requires the name sticker sub-line', () => {
+    const missing = mutated((c) => {
+      delete c.site.stickerSub;
+    });
+    expect(() => parseContent(missing)).toThrow(/- site\.stickerSub: /);
+    const blank = mutated((c) => {
+      c.site.stickerSub = '  ';
+    });
+    expect(() => parseContent(blank)).toThrow(/- site\.stickerSub: /);
+  });
+
+  it('rejects a misspelt optional key instead of silently dropping it', () => {
+    const raw = mutated((c) => {
+      c.site.links.instgram = 'https://instagram.com/me';
+    });
+    expect(() => parseContent(raw)).toThrow(/^Invalid content:/);
+    expect(() => parseContent(raw)).toThrow(/- site\.links\.instgram: /);
+  });
+
+  it('rejects unknown keys at the top level, inside objects and inside array items', () => {
+    const topLevel = mutated((c) => {
+      c.skills = [];
+    });
+    expect(() => parseContent(topLevel)).toThrow(/- skills: /);
+    const nested = mutated((c) => {
+      c.work.items[0].gallry = [];
+    });
+    expect(() => parseContent(nested)).toThrow(/- work\.items\.0\.gallry: /);
+    const localizedExtra = mutated((c) => {
+      c.site.title.fr = 'Portfolio';
+    });
+    expect(() => parseContent(localizedExtra)).toThrow(/- site\.title\.fr: /);
+  });
+
   it('reports every issue on its own line', () => {
     const raw = mutated((c) => {
       c.site.links.email = 'nope';
@@ -199,6 +234,7 @@ describe('dummy content', () => {
     expect(content.ui.categories.competition).toEqual({ en: 'Competition', id: 'Lomba' });
     expect(content.site.status).toEqual({ en: 'Open to internship', id: 'Terbuka untuk magang' });
     expect(content.site.name).toBe('NAMA KAMU');
+    expect(content.site.stickerSub).toBe('TRI · DTEDI · UGM');
     expect(content.site.tagline).toEqual({
       en: 'stay *curious*,\nstay *connected*',
       id: 'tetap *penasaran*,\ntetap *terhubung*',

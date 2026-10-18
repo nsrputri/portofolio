@@ -1,0 +1,67 @@
+---
+interface Props {
+  /** Bold line at the top. */
+  name: string;
+  /** Small line under the barcode. */
+  sub: string;
+  size?: 'sm' | 'lg';
+}
+
+const { name, sub, size = 'sm' } = Astro.props;
+---
+
+<div class:list={['sticker', { 'sticker--lg': size === 'lg' }]}>
+  <b>{name}</b>
+  <i class="barcode" aria-hidden="true"></i>
+  <small>{sub}</small>
+</div>
+
+<style>
+  .sticker {
+    display: inline-grid;
+    gap: 5px;
+    padding: 10px 14px 8px;
+    border-radius: 3px;
+    background: #f4f2ed;
+    color: #1f1e1c;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+    rotate: -2deg;
+  }
+
+  .sticker b {
+    font: 500 15px var(--mono);
+    letter-spacing: 0.14em;
+  }
+
+  .sticker small {
+    font: 500 9.5px var(--mono);
+    letter-spacing: 0.12em;
+    color: #55524d;
+  }
+
+  .barcode {
+    display: block;
+    height: 24px;
+    width: 128px;
+    background: repeating-linear-gradient(
+      90deg,
+      #1d1d1d 0 2px,
+      transparent 2px 4px,
+      #1d1d1d 4px 5px,
+      transparent 5px 8px,
+      #1d1d1d 8px 11px,
+      transparent 11px 12px,
+      #1d1d1d 12px 13px,
+      transparent 13px 16px
+    );
+  }
+
+  .sticker--lg b {
+    font-size: 22px;
+  }
+
+  .sticker--lg .barcode {
+    width: 180px;
+    height: 34px;
+  }
+</style>

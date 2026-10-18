@@ -1,0 +1,25 @@
+---
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const PETAL_ANGLES = [0, 72, 144, 216, 288];
+---
+
+<svg class={className} viewBox="-20 -20 40 40" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="currentColor" stroke-width="1.5">
+    {PETAL_ANGLES.map((angle) => (
+      <ellipse cx="0" cy="-9.5" rx="5.2" ry="8.6" transform={`rotate(${angle})`} />
+    ))}
+    <circle r="2.6" />
+  </g>
+</svg>
+
+<style>
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>

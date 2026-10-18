@@ -1,8 +1,11 @@
 import type { ImageMetadata } from 'astro';
 import { z } from 'astro/zod';
 
+// Every object here is strict: an unknown key (a typo such as `links.instgram`) fails the
+// build instead of being silently dropped.
+
 /** A user-visible string in both languages. Whitespace-only counts as empty. */
-export const localized = z.object({
+export const localized = z.strictObject({
   en: z.string().trim().min(1),
   id: z.string().trim().min(1),
 });
@@ -19,9 +22,9 @@ const image = z.custom<ImageMetadata>(
   { message: 'expected an imported image' },
 );
 
-const galleryImage = z.object({ image, alt: localized });
+const galleryImage = z.strictObject({ image, alt: localized });
 
-const workItem = z.object({
+const workItem = z.strictObject({
   category: z.enum(['practicum', 'project', 'organization', 'competition']),
   title: localized,
   meta: localized,
@@ -31,7 +34,7 @@ const workItem = z.object({
   gallery: z.array(galleryImage).default([]),
 });
 
-const certificate = z.object({
+const certificate = z.strictObject({
   title: z.string().trim().min(1),
   issuer: z.string().trim().min(1),
   year: z.number().int().min(2000).max(2100),
@@ -43,9 +46,11 @@ const certificate = z.object({
 
 const cvPath = z.string().regex(/^\/cv\/[\w.-]+\.pdf$/);
 
-export const siteSchema = z.object({
-  site: z.object({
+export const siteSchema = z.strictObject({
+  site: z.strictObject({
     name: z.string().trim().min(1),
+    /** Small line under the barcode on the name sticker. Not translated. */
+    stickerSub: z.string().trim().min(1),
     title: localized,
     description: localized,
     cornerLeft: localized,
@@ -57,8 +62,8 @@ export const siteSchema = z.object({
     portrait: image,
     portraitAlt: localized,
     coverPhoto: image.optional(),
-    cv: z.object({ en: cvPath, id: cvPath }),
-    links: z.object({
+    cv: z.strictObject({ en: cvPath, id: cvPath }),
+    links: z.strictObject({
       email: z.email(),
       linkedin: z.url(),
       github: z.url(),
@@ -66,8 +71,8 @@ export const siteSchema = z.object({
       instagram: z.url().optional(),
     }),
   }),
-  ui: z.object({
-    folders: z.object({
+  ui: z.strictObject({
+    folders: z.strictObject({
       about: localized,
       study: localized,
       work: localized,
@@ -77,30 +82,30 @@ export const siteSchema = z.object({
     close: localized,
     language: localized,
     viewCredential: localized,
-    categories: z.object({
+    categories: z.strictObject({
       practicum: localized,
       project: localized,
       organization: localized,
       competition: localized,
     }),
   }),
-  about: z.object({
+  about: z.strictObject({
     kicker: localized,
     heading: localized,
     intro: localized,
     photo: image,
     photoAlt: localized,
     caption: localized,
-    facts: z.array(z.object({ label: localized, value: localized })).min(1),
+    facts: z.array(z.strictObject({ label: localized, value: localized })).min(1),
     skills: z.array(z.string().trim().min(1)).min(1),
     song: z.string().trim().min(1),
   }),
-  study: z.object({
+  study: z.strictObject({
     kicker: localized,
     heading: localized,
     items: z
       .array(
-        z.object({
+        z.strictObject({
           when: localized,
           title: localized,
           text: localized,
@@ -109,12 +114,12 @@ export const siteSchema = z.object({
       )
       .min(1),
   }),
-  work: z.object({
+  work: z.strictObject({
     kicker: localized,
     heading: localized,
     items: z.array(workItem).min(1),
   }),
-  certificates: z.object({
+  certificates: z.strictObject({
     items: z.array(certificate).min(1),
   }),
 });
@@ -129,8 +134,13 @@ export type SiteContent = z.infer<typeof siteSchema>;
 export function parseContent(raw: unknown): SiteContent {
   const result = siteSchema.safeParse(raw);
   if (result.success) return result.data;
-  const lines = result.error.issues.map(
-    (issue) => `- ${issue.path.map(String).join('.') || '(root)'}: ${issue.message}`,
-  );
+  const lines = result.error.issues.flatMap((issue) => {
+    const path = issue.path.map(String);
+    // Zod reports unknown keys on their parent object. Name each key so a typo is easy to find.
+    if (issue.code === 'unrecognized_keys') {
+      return issue.keys.map((key) => `- ${[...path, key].join('.')}: unknown key`);
+    }
+    return [`- ${path.join('.') || '(root)'}: ${issue.message}`];
+  });
   throw new Error(`Invalid content:\n${lines.join('\n')}`);
 }
