@@ -1,0 +1,2 @@
+# PDFs are byte-offset sensitive (xref table); never convert line endings.
+*.pdf binary
