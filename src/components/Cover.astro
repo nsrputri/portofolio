@@ -73,7 +73,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
     --note-tuck: 36px;
     --note-width: clamp(200px, 20vw, 270px);
     /* The identity row (sticker, CV button, status pill) ends about 570px from the left edge in both
-       languages, so the note never starts before this. */
+       languages with the dummy text, so the note never starts before this. A longer status wraps
+       inside its pill to stay clear of the note (see .cover-id below). */
     --id-row-end: 580px;
     position: relative;
     isolation: isolate;
@@ -193,7 +194,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
        tagline: on a laptop-height window there is only about 130px between the two, so the note is
        sized to fit that (see its font below) and can never push the stack off the first screen. */
     bottom: calc(var(--stack-h, 0px) - var(--note-tuck));
-    right: min(clamp(120px, 17vw, 270px), calc(100vw - var(--id-row-end) - var(--note-width)));
+    /* 100% is the cover's width, which leaves out a scrollbar where 100vw would include it. */
+    right: min(clamp(120px, 17vw, 270px), calc(100% - var(--id-row-end) - var(--note-width)));
     width: var(--note-width);
     padding: 28px 16px 14px;
     rotate: -3deg;
@@ -249,6 +251,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
   }
 
   .status i {
+    flex: none;
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -262,6 +265,24 @@ const DECORATIVE_ALT = { en: '', id: '' };
   @media (max-height: 720px) {
     .cover-title {
       margin-top: clamp(14px, 3vh, 28px);
+    }
+  }
+
+  /* Where the note shows, the identity row stops 10px short of it (its left edge, worked out from its
+     `right` above; 100% here is the cover's width less both gutters). A status longer than the dummy
+     one then wraps inside its pill, which stays shorter than the sticker, instead of running under the
+     note; if even its longest word does not fit, it moves to a second line as on a phone. */
+  @media (min-width: 881px) {
+    .cover-id {
+      max-width: calc(
+        max(100% + 2 * var(--gutter) - clamp(120px, 17vw, 270px) - var(--note-width), var(--id-row-end)) -
+          var(--gutter) - 10px
+      );
+    }
+
+    .status {
+      flex: 1 1 0;
+      max-width: max-content;
     }
   }
 

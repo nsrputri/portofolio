@@ -176,6 +176,30 @@ test.describe('cover and folder stack', () => {
     }
   }
 
+  // Real content can have a longer status than the dummy one, and the note sits right next to the
+  // identity row at these widths.
+  for (const viewport of [
+    { width: 900, height: 700 },
+    { width: 1024, height: 640 },
+  ]) {
+    test(`a longer status wraps clear of the note at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await gotoStatic(page);
+      await page.evaluate(() => {
+        for (const text of document.querySelectorAll('.cover .status [data-l]')) {
+          text.textContent = 'Looking for an internship in networking';
+        }
+      });
+      const note = await boxOf(page.locator('.cover .note'));
+      const status = await boxOf(page.locator('.cover .status'));
+      const sticker = await boxOf(page.locator('.cover .sticker'));
+      expect(status.x + status.width, 'status right edge vs note left edge').toBeLessThanOrEqual(note.x);
+      // It wraps inside the pill rather than adding a line under the sticker, so the cover keeps its height.
+      expect(status.y, 'status stays on the sticker row').toBeLessThan(sticker.y + sticker.height);
+      expect(status.y + status.height, 'status bottom').toBeLessThanOrEqual(viewport.height);
+    });
+  }
+
   test('note gives way to the identity row on a narrow screen', async ({ page }) => {
     await page.setViewportSize({ width: 800, height: 900 });
     await gotoStatic(page);
