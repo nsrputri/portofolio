@@ -84,6 +84,8 @@ Setiap baris berbentuk `- lokasi: pesan`. Lokasi menunjukkan letaknya di `conten
 
 Artinya file di alamat itu tidak ditemukan. Cek nama folder dan file di `src/assets/` (huruf besar-kecil juga), serta `../` di depannya.
 
+Kebalikannya, foto yang di-`import` tetapi tidak dipakai di mana pun (misalnya setelah satu sertifikat dihapus) juga menggagalkan build, dengan pesan seperti `src/data/content.ts:14:1 - error ts(6133): 'cert4' is declared but its value is never read.` Hapus baris `import` itu. Foto seperti itu akan ikut terbit dalam ukuran asli, jadi build sengaja menolaknya.
+
 ### Tes dan isi aslimu
 
 Tes tidak lagi mengecek teks contoh. Tes membaca isi `content.ts` dan membandingkan halaman dengan isi itu, jadi tes tetap lulus setelah isinya kamu ganti. Yang masih bisa gagal karena isimu, dan memang sebaiknya diperbaiki:

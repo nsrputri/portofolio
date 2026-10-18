@@ -30,7 +30,9 @@ test.describe('build output', () => {
     const shipped = published
       .filter((file) => originals.has(sha(file)))
       .map((file) => `${relative(ROOT, file)} (copy of ${originals.get(sha(file))})`);
-    expect(shipped, 'original images in dist/_astro').toEqual([]);
+    // Two ways this happens: an image imported in src/data/content.ts but not used anywhere (tsconfig's
+    // noUnusedLocals makes `npm run build` refuse that), or code that reads an imported image's `.src`.
+    expect(shipped, 'original images in dist/_astro (an unused image import, or code reading .src)').toEqual([]);
     // The images are still there, as optimised WebP: the check above is not passing on an empty folder.
     expect(published.filter((file) => extname(file) === '.webp').length).toBeGreaterThan(0);
   });
