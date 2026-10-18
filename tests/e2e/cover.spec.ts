@@ -1,4 +1,5 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
+import { plain, siteContent } from './helpers/content';
 import { measureContrast } from './helpers/contrast';
 
 const VIEWPORTS = [
@@ -17,6 +18,14 @@ async function openIn(page: Page, lang: (typeof LANGS)[number]) {
   await page.addInitScript((value) => localStorage.setItem('lang', value), lang);
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('lang', lang);
+}
+
+/** The file at `href` is really a PDF, not the not-found page or the home page under a .pdf name. */
+async function expectPdf(request: APIRequestContext, href: string) {
+  const response = await request.get(href);
+  expect(response.status(), href).toBe(200);
+  expect(response.headers()['content-type'], href).toBe('application/pdf');
+  expect((await response.body()).subarray(0, 5).toString('latin1'), `${href} starts like a PDF`).toBe('%PDF-');
 }
 
 async function boxOf(locator: Locator) {
@@ -45,10 +54,9 @@ for (const viewport of VIEWPORTS) {
           expect(box.x, `${name} left`).toBeGreaterThanOrEqual(0);
           expect(box.x + box.width, `${name} right`).toBeLessThanOrEqual(viewport.width);
         }
-        await expect(pieces.sticker).toContainText('NAMA KAMU');
-        await expect(pieces.status).toHaveText(lang === 'en' ? 'Open to internship' : 'Terbuka untuk magang', {
-          useInnerText: true,
-        });
+        const { site } = siteContent();
+        await expect(pieces.sticker).toContainText(site.name);
+        await expect(pieces.status).toHaveText(site.status[lang], { useInnerText: true });
       });
 
       test(`toggle does not overlap corner label (${lang})`, async ({ page }) => {
@@ -78,11 +86,15 @@ for (const viewport of VIEWPORTS) {
           // The note is hidden on a phone.
           ...(viewport.width > 680 ? ['.cover .note p'] : []),
         ];
+        // With a cover photo, what is measured is the photo under its dark overlay.
+        const advice = siteContent().site.coverPhoto
+          ? ' (the cover photo is too bright behind this text: use a darker photo, or darken the overlay in .cover-bg::after in src/components/Cover.astro)'
+          : '';
         for (const result of await measureContrast(page, selectors)) {
           const needed = result.large ? 3 : 4.5;
           // Soft, so one run lists every element that falls short.
           expect
-            .soft(result.ratio, `${result.selector}: ${result.color} ${result.fontPx}px on ${result.worstBackground}`)
+            .soft(result.ratio, `${result.selector}: ${result.color} ${result.fontPx}px on ${result.worstBackground}${advice}`)
             .toBeGreaterThanOrEqual(needed);
         }
       });
@@ -96,52 +108,61 @@ test.describe('cover content', () => {
   });
 
   test('CV link follows language', async ({ page }) => {
+    const { site, ui } = siteContent();
     const link = visibleCvLink(page);
-    await expect(link).toHaveAttribute('href', '/cv/cv-en.pdf');
+    await expect(link).toHaveAttribute('href', site.cv.en);
     await expect(link).toHaveAttribute('download', '');
-    await expect(link).toHaveText(/Download CV/);
-    expect((await page.request.get('/cv/cv-en.pdf')).status()).toBe(200);
+    await expect(link).toContainText(ui.downloadCv.en);
+    await expectPdf(page.request, site.cv.en);
 
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(link).toHaveAttribute('href', '/cv/cv-id.pdf');
+    await expect(link).toHaveAttribute('href', site.cv.id);
     await expect(link).toHaveAttribute('download', '');
-    await expect(link).toHaveText(/Unduh CV/);
-    const href = await link.getAttribute('href');
-    expect((await page.request.get(href!)).status()).toBe(200);
+    await expect(link).toContainText(ui.downloadCv.id);
+    await expectPdf(page.request, site.cv.id);
   });
 
-  test('cover falls back to gradient without a cover photo', async ({ page }) => {
-    await expect(page.locator('header.cover')).toHaveClass(/(^|\s)cover--fallback(\s|$)/);
-    await expect(page.locator('.cover-bg img')).toHaveCount(0);
+  // components.test.ts renders both cases from fixtures; this checks the one the content uses.
+  test('cover shows the cover photo, or the gradient when there is none', async ({ page }) => {
+    const cover = page.locator('header.cover');
+    const backdrop = page.locator('.cover-bg img');
+    if (siteContent().site.coverPhoto) {
+      await expect(cover).not.toHaveClass(/(^|\s)cover--fallback(\s|$)/);
+      await expect(backdrop).toHaveCount(1);
+      await expect.poll(() => backdrop.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    } else {
+      await expect(cover).toHaveClass(/(^|\s)cover--fallback(\s|$)/);
+      await expect(backdrop).toHaveCount(0);
+    }
   });
 
   test('tagline is the only h1', async ({ page }) => {
+    const { tagline } = siteContent().site;
     const h1 = page.getByRole('heading', { level: 1 });
     await expect(h1).toHaveCount(1);
-    await expect(h1).toHaveText('stay curious, stay connected', { useInnerText: true });
+    await expect(h1).toHaveText(plain(tagline.en), { useInnerText: true });
     await idButton(page).click();
-    await expect(h1).toHaveText('tetap penasaran, tetap terhubung', { useInnerText: true });
+    await expect(h1).toHaveText(plain(tagline.id), { useInnerText: true });
   });
 
   test('portrait alt follows language', async ({ page }) => {
+    const { portraitAlt } = siteContent().site;
     const portrait = page.locator('.cover .polaroid img');
-    const altEn = await portrait.getAttribute('data-alt-en');
-    const altId = await portrait.getAttribute('data-alt-id');
-    expect(altEn).toBeTruthy();
-    expect(altId).toBeTruthy();
-    expect(altId).not.toBe(altEn);
-    await expect(portrait).toHaveAttribute('alt', altEn!);
+    await expect(portrait).toHaveAttribute('data-alt-en', portraitAlt.en);
+    await expect(portrait).toHaveAttribute('data-alt-id', portraitAlt.id);
+    await expect(portrait).toHaveAttribute('alt', portraitAlt.en);
     await idButton(page).click();
-    await expect(portrait).toHaveAttribute('alt', altId!);
+    await expect(portrait).toHaveAttribute('alt', portraitAlt.id);
   });
 
   test('meta tags', async ({ page }) => {
+    const { title, description } = siteContent().site;
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /^https:\/\/.+\/og\.png$/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /\S/);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /^https:\/\/.+\/$/);
-    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /Internet Engineering Portfolio/);
-    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', /Portfolio of an Internet Engineering/);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', title.en);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', description.en);
     const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', canonical!);
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');

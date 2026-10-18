@@ -6,6 +6,9 @@ const ESCAPES: Record<string, string> = {
   "'": '&#39;',
 };
 
+/** `*x*`, where x neither starts nor ends with whitespace. The tests use it to read content the same way. */
+export const EMPHASIS = /\*([^*\s](?:[^*]*[^*\s])?)\*/g;
+
 /**
  * Renders a content string as safe inline HTML: escapes `& < > " '`, turns
  * `*x*` into `<em>x</em>` and newlines into `<br>`. An asterisk only opens
@@ -14,6 +17,6 @@ const ESCAPES: Record<string, string> = {
 export function renderEm(text: string): string {
   return text
     .replace(/[&<>"']/g, (ch) => ESCAPES[ch])
-    .replace(/\*([^*\s](?:[^*]*[^*\s])?)\*/g, '<em>$1</em>')
+    .replace(EMPHASIS, '<em>$1</em>')
     .replace(/\n/g, '<br>');
 }

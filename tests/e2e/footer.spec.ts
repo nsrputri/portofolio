@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
+import { siteContent } from './helpers/content';
 import { gotoStatic, idle, noHorizontalScroll, openIds } from './helpers/page';
 
 const LANGS = ['en', 'id'] as const;
@@ -20,52 +21,65 @@ test.describe('footer links', () => {
     await gotoStatic(page);
   });
 
+  // components.test.ts renders both cases from fixtures; this checks the ones the content uses.
   test('optional links render only when set', async ({ page }) => {
-    // The dummy content has a WhatsApp number but no Instagram account.
-    const whatsapp = page.locator('a[href^="https://wa.me/"]');
-    await expect(whatsapp).toHaveCount(1);
-    await expect(whatsapp).toHaveAttribute('href', /^https:\/\/wa\.me\/\d{8,15}$/);
-    await expect(page.locator('a[href*="instagram.com"]')).toHaveCount(0);
+    const { links } = siteContent().site;
+    const whatsapp = page.locator('footer a[href^="https://wa.me/"]');
+    await expect(whatsapp).toHaveCount(links.whatsapp ? 1 : 0);
+    if (links.whatsapp) await expect(whatsapp).toHaveAttribute('href', `https://wa.me/${links.whatsapp}`);
+    const instagram = page.locator('footer').getByRole('link', { name: 'Instagram', exact: true });
+    await expect(instagram).toHaveCount(links.instagram ? 1 : 0);
+    if (links.instagram) await expect(instagram).toHaveAttribute('href', links.instagram);
   });
 
   test('contact links', async ({ page }) => {
+    const { links } = siteContent().site;
     const footer = page.locator('footer');
-    await expect(footer.locator('a[href^="mailto:"]')).toHaveCount(1);
-    for (const name of ['LinkedIn', 'GitHub', 'WhatsApp']) {
+    await expect(footer.locator('a[href^="mailto:"]')).toHaveAttribute('href', `mailto:${links.email}`);
+    const external = [
+      { name: 'LinkedIn', href: links.linkedin },
+      { name: 'GitHub', href: links.github },
+      ...(links.whatsapp ? [{ name: 'WhatsApp', href: `https://wa.me/${links.whatsapp}` }] : []),
+      ...(links.instagram ? [{ name: 'Instagram', href: links.instagram }] : []),
+    ];
+    for (const { name, href } of external) {
       const link = footer.getByRole('link', { name, exact: true });
       await expect(link, name).toHaveCount(1);
+      await expect(link, name).toHaveAttribute('href', href);
       await expect(link, name).toHaveAttribute('rel', /noopener/);
       await expect(link, name).toHaveAttribute('target', '_blank');
     }
-    await expect(footer.getByRole('link', { name: 'LinkedIn', exact: true })).toHaveAttribute('href', /linkedin\.com/);
-    await expect(footer.getByRole('link', { name: 'GitHub', exact: true })).toHaveAttribute('href', /github\.com/);
   });
 
   test('CV links follow language', async ({ page }) => {
+    const { site, ui } = siteContent();
     const link = page.locator('footer .cv-link:visible');
-    await expect(link).toHaveAttribute('href', '/cv/cv-en.pdf');
+    await expect(link).toHaveAttribute('href', site.cv.en);
     await expect(link).toHaveAttribute('download', '');
-    await expect(link).toHaveText(/Download CV/);
+    await expect(link).toContainText(ui.downloadCv.en);
 
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(link).toHaveAttribute('href', '/cv/cv-id.pdf');
-    await expect(link).toHaveText(/Unduh CV/);
+    await expect(link).toHaveAttribute('href', site.cv.id);
+    await expect(link).toContainText(ui.downloadCv.id);
   });
 });
 
 test.describe('footer content', () => {
   test('shows the big sticker, the address and the thanks in both languages', async ({ page }) => {
+    const { site } = siteContent();
     await gotoStatic(page);
     const footer = page.locator('footer');
-    await expect(footer.locator('.sticker')).toContainText('NAMA KAMU');
+    await expect(footer.locator('.sticker')).toContainText(site.name);
     await expect(footer.locator('.sticker')).toHaveClass(/sticker--lg/);
-    await expect(footer).toContainText('namakamu.pages.dev');
+    // The address is the `site` setting in astro.config.mjs, the same one the canonical link uses.
+    const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+    await expect(footer.locator('.foot-url')).toHaveText(new URL(canonical!).host);
 
-    const thanks = footer.locator('[data-l]:visible', { hasText: /Thanks|Terima kasih/ });
-    await expect(thanks).toHaveText(/^Thanks for stopping by!/);
+    const thanks = footer.locator('.foot-thanks [data-l]:visible');
+    await expect(thanks).toHaveText(site.thanks.en);
     await idButton(page).click();
-    await expect(thanks).toHaveText(/^Terima kasih sudah mampir!/);
+    await expect(thanks).toHaveText(site.thanks.id);
   });
 
   for (const lang of LANGS) {

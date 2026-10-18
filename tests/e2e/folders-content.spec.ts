@@ -1,12 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { containing, emphasised, plain, siteContent } from './helpers/content';
 import { gotoStatic, noHorizontalScroll } from './helpers/page';
 
 const IDS = ['about', 'study', 'work', 'cert'] as const;
-const LABELS = {
-  en: ['About Me', 'Study Journey', 'What I Do', 'Certificates'],
-  id: ['Tentang Aku', 'Perjalanan Kuliah', 'Yang Aku Lakukan', 'Sertifikat'],
-} as const;
 const LANGS = ['en', 'id'] as const;
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
@@ -26,11 +23,12 @@ test.describe('folder shell', () => {
     expect(await folders.evaluateAll((els) => els.map((el) => el.id))).toEqual([...IDS]);
 
     // Only the label of the active language is displayed, so ":visible" picks it.
+    const { folders: names } = siteContent().ui;
     const labels = page.locator('main.stack > section.folder .folder-tab [data-l]:visible');
-    await expect(labels).toHaveText([...LABELS.en]);
+    await expect(labels).toHaveText(IDS.map((id) => names[id].en));
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(labels).toHaveText([...LABELS.id]);
+    await expect(labels).toHaveText(IDS.map((id) => names[id].id));
   });
 
   test('every folder has the structure the open/close animation relies on', async ({ page }) => {
@@ -190,33 +188,37 @@ test.describe('cover and folder stack', () => {
 });
 
 test.describe('about me', () => {
-  test('about shows facts and skills', async ({ page }) => {
+  test('about shows every fact and skill', async ({ page }) => {
+    const { facts, skills } = siteContent().about;
     await gotoStatic(page);
-    await expect(page.locator('#about .facts > div')).toHaveCount(4);
-    await expect(page.locator('#about .chips li')).toHaveCount(5);
+    await expect(page.locator('#about .facts > div')).toHaveCount(facts.length);
+    await expect(page.locator('#about .facts dd [data-l]:visible')).toHaveText(facts.map((fact) => fact.value.en));
+    await expect(page.locator('#about .chips li')).toHaveText(skills);
   });
 
   test('about text follows the language', async ({ page }) => {
+    const { about } = siteContent();
     await gotoStatic(page);
     const kicker = page.locator('#about .kicker [data-l]:visible');
+    const heading = page.locator('#about h2 [data-l]:visible');
     const emphasis = page.locator('#about h2 em:visible');
-    const firstFact = page.locator('#about .facts dt [data-l]:visible').first();
+    const factLabels = page.locator('#about .facts dt [data-l]:visible');
     const photo = page.locator('#about .polaroid img');
     const caption = page.locator('#about .polaroid figcaption [data-l]:visible');
 
-    await expect(kicker).toHaveText('// about me');
-    await expect(emphasis).toHaveText('Your Name');
-    await expect(firstFact).toHaveText('Campus');
-    await expect(caption).toHaveText("hi, it's me!");
-    await expect(photo).toHaveAttribute('alt', 'Placeholder photo of the site owner');
-
-    await idButton(page).click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(kicker).toHaveText('// tentang aku');
-    await expect(emphasis).toHaveText('Nama Kamu');
-    await expect(firstFact).toHaveText('Kampus');
-    await expect(caption).toHaveText('hai, ini aku!');
-    await expect(photo).toHaveAttribute('alt', 'Foto pemilik situs (contoh)');
+    for (const lang of LANGS) {
+      if (lang === 'id') {
+        await idButton(page).click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+      }
+      await expect(kicker, lang).toHaveText(about.kicker[lang]);
+      await expect(heading, lang).toHaveText(plain(about.heading[lang]), { useInnerText: true });
+      // `*x*` in the heading is set in italics.
+      await expect(emphasis, lang).toHaveText(emphasised(about.heading[lang]));
+      await expect(factLabels, lang).toHaveText(about.facts.map((fact) => fact.label[lang]));
+      await expect(caption, lang).toHaveText(about.caption[lang]);
+      await expect(photo, lang).toHaveAttribute('alt', about.photoAlt[lang]);
+    }
   });
 
   test('cassette shows the favourite song on a wide screen and is decorative', async ({ page }) => {
@@ -224,7 +226,7 @@ test.describe('about me', () => {
     const cassette = page.locator('#about .cassette');
     await expect(cassette).toBeVisible();
     await expect(cassette).toHaveAttribute('aria-hidden', 'true');
-    await expect(cassette).toContainText('now playing ♪ Judul Lagu Favorit');
+    await expect(cassette).toContainText(`now playing ♪ ${siteContent().about.song}`);
   });
 
   // The cassette sits in the bottom right corner of the folder, where the last row of chips could run into it.
@@ -270,30 +272,35 @@ test.describe('about me', () => {
 });
 
 test.describe('study journey', () => {
-  test('study marks the current item', async ({ page }) => {
+  test('study marks the items flagged as current', async ({ page }) => {
+    const { items: steps } = siteContent().study;
     await gotoStatic(page);
     const items = page.locator('#study .timeline li');
-    await expect(items).not.toHaveCount(0);
-    await expect(page.locator('#study .timeline li.now')).toHaveCount(1);
-    await expect(items.last()).toHaveClass(/(^|\s)now(\s|$)/);
-    await expect(items.last()).toHaveAttribute('aria-current', 'step');
+    await expect(items).toHaveCount(steps.length);
+    const marks = await items.evaluateAll((lis) =>
+      lis.map((li) => ({ now: li.classList.contains('now'), ariaCurrent: li.getAttribute('aria-current') })),
+    );
+    expect(marks).toEqual(steps.map((step) => ({ now: step.current, ariaCurrent: step.current ? 'step' : null })));
   });
 
   test('study text follows the language', async ({ page }) => {
+    const { study } = siteContent();
     await gotoStatic(page);
     const kicker = page.locator('#study .kicker [data-l]:visible');
-    const firstTitle = page.locator('#study .timeline li').first().locator('b [data-l]:visible');
+    const titles = page.locator('#study .timeline li b [data-l]:visible');
+    const texts = page.locator('#study .timeline li p [data-l]:visible');
     const emphasis = page.locator('#study h2 em:visible');
 
-    await expect(kicker).toHaveText('// study journey');
-    await expect(firstTitle).toHaveText('Started at TRI UGM');
-    await expect(emphasis).toHaveText('“what is an IP address?”');
-
-    await idButton(page).click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(kicker).toHaveText('// perjalanan kuliah');
-    await expect(firstTitle).toHaveText('Masuk TRI UGM');
-    await expect(emphasis).toHaveText('“apa itu IP address?”');
+    for (const lang of LANGS) {
+      if (lang === 'id') {
+        await idButton(page).click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+      }
+      await expect(kicker, lang).toHaveText(study.kicker[lang]);
+      await expect(titles, lang).toHaveText(study.items.map((item) => item.title[lang]));
+      await expect(texts, lang).toHaveText(study.items.map((item) => item.text[lang]));
+      await expect(emphasis, lang).toHaveText(emphasised(study.heading[lang]));
+    }
   });
 });
 
@@ -301,48 +308,50 @@ test.describe('what I do', () => {
   const cards = (page: Page) => page.locator('#work .w-card');
 
   test('what I do cards show localized category', async ({ page }) => {
+    const { work, ui } = siteContent();
     await gotoStatic(page);
-    await expect(cards(page)).toHaveCount(4);
-    const firstTag = cards(page).first().locator('.tag [data-l]:visible');
-    await expect(firstTag).toHaveText('Practicum');
+    await expect(cards(page)).toHaveCount(work.items.length);
+    const tags = page.locator('#work .w-card .tag [data-l]:visible');
+    await expect(tags).toHaveText(work.items.map((item) => ui.categories[item.category].en));
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(firstTag).toHaveText('Praktikum');
+    await expect(tags).toHaveText(work.items.map((item) => ui.categories[item.category].id));
   });
 
   test('cards are buttons named by their text and wired to a detail template', async ({ page }) => {
+    const { work } = siteContent();
     await gotoStatic(page);
     const first = cards(page).first();
     await expect(first).toHaveJSProperty('tagName', 'BUTTON');
     await expect(first).toHaveAttribute('type', 'button');
     await expect(first).toHaveAttribute('aria-haspopup', 'dialog');
-    await expect(page.getByRole('button', { name: /Configuring a small office network with Mikrotik/ })).toHaveCount(1);
+    await expect(first).toHaveAccessibleName(containing(work.items[0].title.en));
     // Each card points at its own <template>; the details are not in the page until a card is opened.
     const ids = await cards(page).evaluateAll((els) => els.map((el) => el.getAttribute('data-lightbox')));
-    expect(ids).toEqual(['lb-work-1', 'lb-work-2', 'lb-work-3', 'lb-work-4']);
+    expect(ids).toEqual(work.items.map((_, i) => `lb-work-${i + 1}`));
     for (const id of ids as string[]) {
       expect(await page.evaluate((tid) => document.getElementById(tid)?.tagName, id), id).toBe('TEMPLATE');
     }
   });
 
   test('what I do text follows the language', async ({ page }) => {
+    const { work } = siteContent();
     await gotoStatic(page);
     const kicker = page.locator('#work .kicker [data-l]:visible');
     const emphasis = page.locator('#work h2 em:visible');
-    const firstTitle = cards(page).first().locator('.w-title [data-l]:visible');
-    const firstMeta = cards(page).first().locator('.meta [data-l]:visible');
+    const titles = page.locator('#work .w-card .w-title [data-l]:visible');
+    const metas = page.locator('#work .w-card .meta [data-l]:visible');
 
-    await expect(kicker).toHaveText('// what I do at uni');
-    await expect(emphasis).toHaveText('and committees.');
-    await expect(firstTitle).toHaveText('Configuring a small office network with Mikrotik');
-    await expect(firstMeta).toHaveText('Networking Lab · 2024');
-
-    await idButton(page).click();
-    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(kicker).toHaveText('// yang aku kerjakan di kuliah');
-    await expect(emphasis).toHaveText('dan kepanitiaan.');
-    await expect(firstTitle).toHaveText('Konfigurasi jaringan kantor kecil dengan Mikrotik');
-    await expect(firstMeta).toHaveText('Lab Jaringan · 2024');
+    for (const lang of LANGS) {
+      if (lang === 'id') {
+        await idButton(page).click();
+        await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+      }
+      await expect(kicker, lang).toHaveText(work.kicker[lang]);
+      await expect(emphasis, lang).toHaveText(emphasised(work.heading[lang]));
+      await expect(titles, lang).toHaveText(work.items.map((item) => item.title[lang]));
+      await expect(metas, lang).toHaveText(work.items.map((item) => item.meta[lang]));
+    }
   });
 
   test('the binder clip is decoration', async ({ page }) => {
@@ -354,21 +363,25 @@ test.describe('what I do', () => {
 test.describe('certificates', () => {
   const cards = (page: Page) => page.locator('#cert .c-card');
 
-  test('certificates numbered 01–04', async ({ page }) => {
+  test('certificates numbered in order', async ({ page }) => {
+    const { items } = siteContent().certificates;
     await gotoStatic(page);
-    await expect(cards(page)).toHaveCount(4);
-    await expect(page.locator('.c-card .c-no')).toHaveText(['01', '02', '03', '04']);
+    await expect(cards(page)).toHaveCount(items.length);
+    await expect(page.locator('.c-card .c-no')).toHaveText(items.map((_, i) => String(i + 1).padStart(2, '0')));
   });
 
   test('cards show title, issuer and year, tilted in turn', async ({ page }) => {
+    const { items } = siteContent().certificates;
     await gotoStatic(page);
-    await expect(cards(page).first().locator('.c-title')).toHaveText('MTCNA');
-    await expect(cards(page).first().locator('.c-meta')).toHaveText('MikroTik · 2024');
-    await expect(cards(page).nth(1)).toHaveAccessibleName(/CCNA: Introduction to Networks/);
+    await expect(cards(page).locator('.c-title')).toHaveText(items.map((cert) => cert.title));
+    await expect(cards(page).locator('.c-meta')).toHaveText(items.map((cert) => `${cert.issuer} · ${cert.year}`));
+    // The card is a button named by the text on it (its thumbnail is decorative).
+    await expect(cards(page).first()).toHaveAccessibleName(containing(items[0].title));
     const tilts = await cards(page).evaluateAll((els) => els.map((el) => (el as HTMLElement).style.getPropertyValue('--r')));
-    expect(tilts).toEqual(['-3deg', '2deg', '-1.5deg', '3deg']);
+    const TILTS = ['-3deg', '2deg', '-1.5deg', '3deg'];
+    expect(tilts).toEqual(items.map((_, i) => TILTS[i % TILTS.length]));
     const ids = await cards(page).evaluateAll((els) => els.map((el) => el.getAttribute('data-lightbox')));
-    expect(ids).toEqual(['lb-cert-1', 'lb-cert-2', 'lb-cert-3', 'lb-cert-4']);
+    expect(ids).toEqual(items.map((_, i) => `lb-cert-${i + 1}`));
     await expect(cards(page).first()).toHaveJSProperty('tagName', 'BUTTON');
     await expect(cards(page).first().locator('.clip')).toHaveAttribute('aria-hidden', 'true');
   });

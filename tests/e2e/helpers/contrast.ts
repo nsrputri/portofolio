@@ -25,6 +25,17 @@ export interface ContrastResult {
  */
 export async function measureContrast(page: Page, selectors: string[]): Promise<ContrastResult[]> {
   await page.evaluate(() => document.fonts.ready);
+  // A cover photo still loading would read as a different background in each screenshot.
+  await page.evaluate(() =>
+    Promise.all(
+      [...document.images]
+        .filter((img) => {
+          const rect = img.getBoundingClientRect();
+          return rect.bottom > 0 && rect.top < window.innerHeight && rect.width > 0;
+        })
+        .map((img) => img.decode().catch(() => undefined)),
+    ),
+  );
 
   const targets = await page.evaluate((sels) => {
     return sels.map((selector) => {

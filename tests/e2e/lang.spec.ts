@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { siteContent } from './helpers/content';
 
 test.describe('language toggle', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,20 +7,24 @@ test.describe('language toggle', () => {
   });
 
   test('default is English', async ({ page }) => {
+    const { site, ui } = siteContent();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.locator('.cover').getByText('Download CV')).toBeVisible();
-    await expect(page.locator('.cover').getByText('Unduh CV')).toBeHidden();
-    await expect(page).toHaveTitle(/Internet Engineering Portfolio/);
+    await expect(page.locator('.cover .cv-link[data-l="en"]')).toBeVisible();
+    await expect(page.locator('.cover .cv-link[data-l="en"]')).toContainText(ui.downloadCv.en);
+    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeHidden();
+    await expect(page).toHaveTitle(site.title.en);
   });
 
   test('toggle switches to Indonesian without reload', async ({ page }) => {
+    const { site, ui } = siteContent();
     const origin = await page.evaluate(() => performance.timeOrigin);
     await page.getByRole('button', { name: 'ID', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(page.locator('.cover').getByText('Unduh CV')).toBeVisible();
-    await expect(page.locator('.cover').getByText('Download CV')).toBeHidden();
-    await expect(page).toHaveTitle(/Portofolio Teknologi Rekayasa Internet/);
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Portofolio mahasiswa/);
+    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeVisible();
+    await expect(page.locator('.cover .cv-link[data-l="id"]')).toContainText(ui.downloadCv.id);
+    await expect(page.locator('.cover .cv-link[data-l="en"]')).toBeHidden();
+    await expect(page).toHaveTitle(site.title.id);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', site.description.id);
     await expect(page.getByRole('button', { name: 'ID', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'EN', exact: true })).toHaveAttribute('aria-pressed', 'false');
     expect(await page.evaluate(() => performance.timeOrigin)).toBe(origin);
@@ -30,7 +35,7 @@ test.describe('language toggle', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(page.locator('.cover').getByText('Unduh CV')).toBeVisible();
+    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'ID', exact: true })).toHaveAttribute('aria-pressed', 'true');
   });
 

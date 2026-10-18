@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { containing, siteContent } from './helpers/content';
 import { gotoStatic, noHorizontalScroll } from './helpers/page';
 
 const LANGS = ['en', 'id'] as const;
@@ -18,6 +19,7 @@ async function expectClosed(page: Page) {
 
 test.describe('certificate details', () => {
   test('certificate opens full scan', async ({ page }) => {
+    const [cert] = siteContent().certificates.items;
     await gotoStatic(page);
     await page.locator('.c-card').first().click();
     await expectOpen(page);
@@ -25,14 +27,15 @@ test.describe('certificate details', () => {
     await expect.poll(() => scan.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
     // Title, issuer and year come with the scan, and the dialog is named by the title.
-    await expect(page.getByRole('dialog', { name: 'MTCNA' })).toBeVisible();
-    await expect(body(page)).toContainText('MikroTik · 2024');
+    await expect(page.getByRole('dialog', { name: cert.title })).toBeVisible();
+    await expect(body(page)).toContainText(`${cert.issuer} · ${cert.year}`);
   });
 
   test('scan alt text follows the language', async ({ page }) => {
+    const [cert] = siteContent().certificates.items;
     await gotoStatic(page);
     await page.locator('.c-card').first().click();
-    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', 'Placeholder scan of the MTCNA certificate');
+    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', cert.alt.en);
     await page.keyboard.press('Escape');
     await expectClosed(page);
 
@@ -41,94 +44,121 @@ test.describe('certificate details', () => {
     await page.locator('.c-card').first().click();
     await expectOpen(page);
     // The details are cloned from a template at open time, so their alt has to match the current language.
-    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', 'Pindaian sertifikat MTCNA (contoh)');
+    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', cert.alt.id);
   });
 
-  test('credential link opens in a new tab only where the certificate has one', async ({ page }) => {
+  // components.test.ts covers every combination from fixtures; this checks the certificates the content has.
+  test('credential and PDF links open in a new tab only where the certificate has them', async ({ page }) => {
+    const { certificates, ui } = siteContent();
     await gotoStatic(page);
-    await page.locator('.c-card').first().click();
-    const link = page.locator('.lightbox-body a[target="_blank"][rel="noopener"]');
-    await expect(link).toHaveCount(1);
-    await expect(link).toHaveAttribute('href', 'https://example.com/credentials/mtcna');
-    await expect(link).toContainText('View credential');
-    await page.keyboard.press('Escape');
-    await expectClosed(page);
-
-    // The third certificate has no credential URL and no PDF.
-    await page.locator('.c-card').nth(2).click();
-    await expect(page.getByRole('dialog', { name: 'Fiber Optic Fundamentals' })).toBeVisible();
-    await expect(page.locator('.lightbox-body a')).toHaveCount(0);
+    for (const [i, cert] of certificates.items.entries()) {
+      await page.locator('.c-card').nth(i).click();
+      await expect(page.getByRole('dialog', { name: cert.title })).toBeVisible();
+      const links = page.locator('.lightbox-body a');
+      const expected = [cert.credentialUrl, cert.pdf].filter((href): href is string => Boolean(href));
+      await expect(links, cert.title).toHaveCount(expected.length);
+      expect(await links.evaluateAll((as) => as.map((a) => a.getAttribute('href'))), cert.title).toEqual(expected);
+      for (const link of await links.all()) {
+        await expect(link).toHaveAttribute('target', '_blank');
+        await expect(link).toHaveAttribute('rel', 'noopener');
+      }
+      if (cert.credentialUrl) await expect(links.first()).toContainText(ui.viewCredential.en);
+      if (cert.pdf) {
+        const response = await page.request.get(cert.pdf);
+        expect(response.status(), cert.pdf).toBe(200);
+        expect(response.headers()['content-type'], cert.pdf).toBe('application/pdf');
+      }
+      await page.keyboard.press('Escape');
+      await expectClosed(page);
+    }
   });
 
   test('credential link is localized', async ({ page }) => {
+    const { certificates, ui } = siteContent();
+    const index = certificates.items.findIndex((cert) => cert.credentialUrl);
+    test.skip(index < 0, 'no certificate in the content has a credential URL (components.test.ts covers the label)');
     await gotoStatic(page);
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await page.locator('.c-card').first().click();
-    await expect(page.locator('.lightbox-body a[target="_blank"]')).toContainText('Lihat kredensial');
+    await page.locator('.c-card').nth(index).click();
+    await expect(page.locator('.lightbox-body a[target="_blank"]').first()).toContainText(ui.viewCredential.id);
   });
 
   test('opening another card replaces the content instead of adding to it', async ({ page }) => {
+    const { certificates, work } = siteContent();
     await gotoStatic(page);
     await page.locator('.c-card').first().click();
-    await expect(page.getByRole('dialog', { name: 'MTCNA' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: certificates.items[0].title })).toBeVisible();
+    await expect(page.locator('.lightbox-body .lb-scan')).toHaveCount(1);
     await page.keyboard.press('Escape');
     await expectClosed(page);
-    await page.locator('.c-card').nth(1).click();
-    await expect(page.getByRole('dialog', { name: 'CCNA: Introduction to Networks' })).toBeVisible();
-    await expect(page.locator('.lightbox-body img')).toHaveCount(1);
-    await expect(body(page)).not.toContainText('MTCNA');
+    await page.locator('.w-card').first().click();
+    await expect(page.getByRole('dialog', { name: work.items[0].title.en })).toBeVisible();
+    await expect(page.locator('.lightbox-body .lb-detail')).toHaveCount(1);
+    await expect(page.locator('.lightbox-body .lb-scan')).toHaveCount(0);
   });
 });
 
 test.describe('work details', () => {
   test('keyboard opens a card', async ({ page }) => {
+    const [item] = siteContent().work.items;
     await gotoStatic(page);
     await page.locator('.w-card').first().focus();
     await page.keyboard.press('Enter');
     await expectOpen(page);
     // innerText skips the hidden Indonesian copy that sits next to the English one.
-    await expect(body(page)).toContainText('Dummy text. Describe the practicum', { useInnerText: true });
-    await expect(body(page)).not.toContainText('Teks dummy', { useInnerText: true });
+    await expect(body(page)).toContainText(item.details.en, { useInnerText: true });
+    if (item.details.id !== item.details.en) {
+      await expect(body(page)).not.toContainText(item.details.id, { useInnerText: true });
+    }
   });
 
   test('details follow the language', async ({ page }) => {
+    const { work, ui } = siteContent();
+    const [item] = work.items;
     await gotoStatic(page);
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
     await page.locator('.w-card').first().click();
     await expectOpen(page);
-    await expect(body(page)).toContainText('Teks dummy. Jelaskan praktikumnya', { useInnerText: true });
-    await expect(body(page)).not.toContainText('Dummy text', { useInnerText: true });
-    await expect(page.getByRole('dialog', { name: 'Konfigurasi jaringan kantor kecil dengan Mikrotik' })).toBeVisible();
-    await expect(page.locator('.lightbox-body .tag')).toContainText(/praktikum/i, { useInnerText: true });
-    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', 'Foto praktikum Mikrotik (contoh)');
+    await expect(body(page)).toContainText(item.details.id, { useInnerText: true });
+    if (item.details.id !== item.details.en) {
+      await expect(body(page)).not.toContainText(item.details.en, { useInnerText: true });
+    }
+    await expect(page.getByRole('dialog', { name: item.title.id })).toBeVisible();
+    // The tag is upper-cased by CSS and innerText follows it.
+    await expect(page.locator('.lightbox-body .tag')).toContainText(new RegExp(containing(ui.categories[item.category].id).source, 'i'), {
+      useInnerText: true,
+    });
+    await expect(page.locator('.lightbox-body img').first()).toHaveAttribute('alt', item.photoAlt.id);
   });
 
   test('shows title, category, meta, details, the photo and the gallery', async ({ page }) => {
+    const { work, ui } = siteContent();
+    // The item with the most gallery images, so the gallery is checked whenever the content has one.
+    const index = work.items.reduce((best, item, i) => (item.gallery.length > work.items[best].gallery.length ? i : best), 0);
+    const item = work.items[index];
     await gotoStatic(page);
-    await page.locator('.w-card').first().click();
+    await page.locator('.w-card').nth(index).click();
     await expectOpen(page);
-    await expect(page.getByRole('dialog', { name: 'Configuring a small office network with Mikrotik' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: item.title.en })).toBeVisible();
     // The tag is upper-cased by CSS and innerText follows it.
-    await expect(body(page)).toContainText(/practicum/i, { useInnerText: true });
-    await expect(body(page)).toContainText('Networking Lab · 2024', { useInnerText: true });
-    // The main photo plus the two gallery images of the first item.
+    await expect(body(page)).toContainText(new RegExp(containing(ui.categories[item.category].en).source, 'i'), {
+      useInnerText: true,
+    });
+    await expect(body(page)).toContainText(item.meta.en, { useInnerText: true });
+    await expect(body(page)).toContainText(item.details.en, { useInnerText: true });
+    // The main photo, then the gallery.
     const images = page.locator('.lightbox-body img');
-    await expect(images).toHaveCount(3);
-    await expect(images.nth(1)).toHaveAttribute('alt', 'Placeholder photo 2 of the practicum');
+    await expect(images).toHaveCount(1 + item.gallery.length);
+    expect(await images.evaluateAll((imgs) => imgs.map((img) => img.getAttribute('alt')))).toEqual([
+      item.photoAlt.en,
+      ...item.gallery.map((shot) => shot.alt.en),
+    ]);
     for (const image of await images.all()) {
       await expect(image).toHaveAttribute('loading', 'lazy');
     }
-    await expect(images.first()).toHaveAttribute('alt', 'Placeholder photo of the Mikrotik practicum');
     await expect.poll(() => images.first().evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-
-    await page.keyboard.press('Escape');
-    await expectClosed(page);
-    // An item without a gallery has just its photo.
-    await page.locator('.w-card').nth(1).click();
-    await expectOpen(page);
-    await expect(page.locator('.lightbox-body img')).toHaveCount(1);
   });
 });
 
@@ -260,7 +290,13 @@ test.describe('on a phone (360px)', () => {
       await gotoStatic(page);
       if (lang === 'id') await idButton(page).click();
       await expect(page.locator('html')).toHaveAttribute('lang', lang);
-      // The first practicum has the most content: a title, details, a photo and two more images.
+      // Real details can be short, so the first card's are made long enough to need scrolling.
+      await page.evaluate(() => {
+        const template = document.getElementById('lb-work-1') as HTMLTemplateElement;
+        for (const text of template.content.querySelectorAll('.lb-text [data-l]')) {
+          text.textContent = `${text.textContent} `.repeat(12);
+        }
+      });
       await page.locator('.w-card').first().click();
       await expectOpen(page);
       await expect.poll(() => page.locator('.lightbox-body img').first().evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
