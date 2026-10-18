@@ -15,3 +15,9 @@ body {
 a {
   color: inherit;
 }
+
+/* Bilingual text: <T> renders both languages; <html lang> decides which one shows. */
+html:not([lang="id"]) [data-l="id"],
+html[lang="id"] [data-l="en"] {
+  display: none !important;
+}

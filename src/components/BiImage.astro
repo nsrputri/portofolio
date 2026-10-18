@@ -1,0 +1,16 @@
+---
+import { Image, type LocalImageProps } from 'astro:assets';
+import type { Localized } from '../data/schema';
+
+/** `Omit` that keeps each member of a union intact (plain `Omit` collapses them). */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+
+type Props = DistributiveOmit<LocalImageProps, 'src' | 'alt'> & {
+  src: ImageMetadata;
+  alt: Localized;
+};
+
+const { src, alt, ...imageProps } = Astro.props;
+---
+
+<Image {...imageProps} src={src} alt={alt.en} data-alt-en={alt.en} data-alt-id={alt.id} />

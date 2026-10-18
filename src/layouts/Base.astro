@@ -9,22 +9,36 @@ import '@fontsource-variable/dm-sans';
 import '@fontsource/silkscreen/400.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
+import type { Localized } from '../data/schema';
 
 interface Props {
-  title: string;
-  description: string;
+  title: Localized;
+  description: Localized;
 }
 
 const { title, description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html
+  lang="en"
+  data-title-en={title.en}
+  data-title-id={title.id}
+  data-desc-en={description.en}
+  data-desc-id={description.id}
+>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
+    <title>{title.en}</title>
+    <meta name="description" content={description.en} />
+    <!-- Sets the stored language before first paint so there is no flash of English.
+         Duplicates resolveLang() in src/scripts/lang.ts: inline scripts cannot import. -->
+    <script is:inline>
+      try {
+        if (localStorage.getItem('lang') === 'id') document.documentElement.lang = 'id';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <slot />

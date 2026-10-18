@@ -1,0 +1,26 @@
+---
+import type { Localized } from '../data/schema';
+import { renderEm } from '../lib/rich';
+
+interface Props {
+  text: Localized;
+  /** Render `*x*` as emphasis and `\n` as a line break (see src/lib/rich.ts). */
+  rich?: boolean;
+}
+
+const { text, rich = false } = Astro.props;
+---
+
+{
+  rich ? (
+    <>
+      <span lang="en" data-l="en" set:html={renderEm(text.en)} />
+      <span lang="id" data-l="id" set:html={renderEm(text.id)} />
+    </>
+  ) : (
+    <>
+      <span lang="en" data-l="en">{text.en}</span>
+      <span lang="id" data-l="id">{text.id}</span>
+    </>
+  )
+}

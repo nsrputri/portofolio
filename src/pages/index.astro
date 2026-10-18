@@ -1,9 +1,15 @@
 ---
 import Base from '../layouts/Base.astro';
+import LangToggle from '../components/LangToggle.astro';
+import T from '../components/T.astro';
+import { content } from '../data/content';
 ---
 
-<Base title="Portfolio" description="Personal portfolio.">
+<Base title={content.site.title} description={content.site.description}>
+  <LangToggle label={content.ui.language} />
   <main>
     <h1>Portfolio</h1>
+    <!-- Temporary: Task 4 moves the CV link into the cover. -->
+    <p><T text={content.ui.downloadCv} /></p>
   </main>
 </Base>

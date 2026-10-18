@@ -1,0 +1,69 @@
+---
+import type { Localized } from '../data/schema';
+import T from './T.astro';
+
+interface Props {
+  label: Localized;
+}
+
+const { label } = Astro.props;
+---
+
+<div class="lang-toggle" role="group" aria-labelledby="lang-toggle-label">
+  <span id="lang-toggle-label" class="visually-hidden"><T text={label} /></span>
+  <button type="button" data-set-lang="en" lang="en" aria-pressed="true">EN</button>
+  <button type="button" data-set-lang="id" lang="id" aria-pressed="false">ID</button>
+</div>
+
+<script>
+  import { initLangToggle, safeLocalStorage } from '../scripts/lang';
+
+  initLangToggle(document, safeLocalStorage());
+</script>
+
+<style>
+  .lang-toggle {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 100;
+    display: flex;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .lang-toggle button {
+    min-width: 40px;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 500 12px/1 var(--mono);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  /* Keyed on <html lang> (set before first paint) so the active state never flashes. */
+  :global(html:not([lang='id'])) .lang-toggle button[data-set-lang='en'],
+  :global(html[lang='id']) .lang-toggle button[data-set-lang='id'] {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .lang-toggle button:focus-visible {
+    outline: 2px solid var(--board);
+    outline-offset: -4px;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>
