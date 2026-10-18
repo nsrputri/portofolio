@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from '@playwright/test';
+import { measureContrast } from './helpers/contrast';
 
 const VIEWPORTS = [
   { width: 1280, height: 800 },
@@ -61,6 +62,29 @@ for (const viewport of VIEWPORTS) {
           corner.y < toggle.y + toggle.height;
         expect(overlaps, `toggle ${JSON.stringify(toggle)} vs corner ${JSON.stringify(corner)}`).toBe(false);
         expect(corner.x + corner.width).toBeLessThanOrEqual(viewport.width);
+      });
+
+      // axe cannot resolve gradients, so this reads the rendered pixels behind each piece of text.
+      test(`cover text meets WCAG AA contrast (${lang})`, async ({ page }) => {
+        await openIn(page, lang);
+        const selectors = [
+          '.cover-corner--left',
+          '.cover-corner--right',
+          '.cover-title',
+          '.cover .status [data-l]',
+          '.cover .cv-link',
+          '.cover .sticker b',
+          '.cover .sticker small',
+          // The note is hidden on a phone.
+          ...(viewport.width > 680 ? ['.cover .note p'] : []),
+        ];
+        for (const result of await measureContrast(page, selectors)) {
+          const needed = result.large ? 3 : 4.5;
+          // Soft, so one run lists every element that falls short.
+          expect
+            .soft(result.ratio, `${result.selector}: ${result.color} ${result.fontPx}px on ${result.worstBackground}`)
+            .toBeGreaterThanOrEqual(needed);
+        }
       });
     }
   });

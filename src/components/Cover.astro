@@ -92,17 +92,27 @@ const DECORATIVE_ALT = { en: '', id: '' };
     object-fit: cover;
   }
 
-  /* Darkens a real photo so the white text keeps its contrast. */
-  .cover:not(.cover--fallback) .cover-bg::after {
+  .cover-bg::after {
     content: '';
     position: absolute;
     inset: 0;
+  }
+
+  /* Darkens a real photo so the white text keeps its contrast. */
+  .cover:not(.cover--fallback) .cover-bg::after {
     background: linear-gradient(
       180deg,
       rgba(18, 15, 12, 0.55),
       rgba(18, 15, 12, 0.4) 45%,
       rgba(18, 15, 12, 0.65)
     );
+  }
+
+  /* The stand-in gradient is light, so white text on it misses 4.5:1. A faint scrim, strongest behind
+     the corner labels at the top and gone by the middle, fixes that without turning it into a dark
+     slab. Its stops are in px because the labels and tagline sit at a fixed distance from the top. */
+  .cover--fallback .cover-bg::after {
+    background: linear-gradient(180deg, rgba(18, 15, 12, 0.2), rgba(18, 15, 12, 0.12) 240px, transparent 480px);
   }
 
   .cover--fallback .cover-bg {
@@ -174,10 +184,12 @@ const DECORATIVE_ALT = { en: '', id: '' };
     position: absolute;
     z-index: 2;
     /* The mockup's offset, but never above the tagline's bottom edge (padding, corner row, title
-       margin and two lines of title). A longer Indonesian tagline would otherwise run under the note. */
+       margin and two lines of title) plus 44px: the paperclip sticks 26px out of the note and the
+       tagline's descenders hang below its line box. A longer Indonesian tagline would otherwise run
+       under the note. */
     top: max(
       clamp(190px, 30vh, 300px),
-      calc(60px + clamp(28px, 7vh, 72px) + 1.76 * var(--title-size) + 16px)
+      calc(60px + clamp(28px, 7vh, 72px) + 1.76 * var(--title-size) + 44px)
     );
     right: clamp(120px, 17vw, 270px);
     width: clamp(180px, 19vw, 270px);
@@ -226,7 +238,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
     gap: 8px;
     padding: 8px 12px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.18);
+    /* Smoked rather than frosted: white text on the light gradient behind it was about 2:1. */
+    background: rgba(20, 18, 15, 0.45);
     backdrop-filter: blur(6px);
     font: 500 12px var(--mono);
     letter-spacing: 0.08em;
