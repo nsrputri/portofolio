@@ -30,7 +30,8 @@ html[lang="id"] [data-l="en"] {
 :root {
   --V: clamp(72px, 10.5vh, 108px);
   --overlap: calc(var(--tab-h) + 20px);
-  --stack-h: calc(4 * var(--V) + var(--overlap));
+  /* --folders is set on <html> by the page: What I Do and Certificates are left out while empty. */
+  --stack-h: calc(var(--folders, 4) * var(--V) + var(--overlap));
 }
 
 .stack {

@@ -2,7 +2,7 @@
 
 Situs portofolio satu halaman, dua bahasa (English sebagai bawaan, tombol `EN | ID` untuk Bahasa Indonesia). Dibuat dengan [Astro](https://astro.build). Folder About, Study, What I Do, dan Certificates terbuka satu per satu saat halaman di-scroll.
 
-> **Sebagian isi masih contoh** (bagian What I Do, sertifikat 2–4, lagu di kaset, dan file CV). Isian dari pemilik dikumpulkan di `bahan/ISI-KONTEN.md` (folder itu tidak ikut ke GitHub). Baca bagian [Jangan deploy dulu](#7-jangan-deploy-dulu) sebelum mengunggah situs ke internet.
+> **Bagian yang belum diisi disembunyikan, bukan diisi contoh.** Folder What I Do muncul begitu `work.items` punya satu kegiatan, tombol Download CV muncul begitu `site.cv` diisi, dan kaset menyebut judul lagu begitu `about.song` diisi. Isian dari pemilik dikumpulkan di `bahan/ISI-KONTEN.md` (folder itu tidak ikut ke GitHub). Situs tayang di https://nisrinaputri.pages.dev.
 
 ## 1. Persiapan
 
@@ -34,7 +34,7 @@ Di tagline, label sudut cover, dan judul tiap bagian (`about.heading`, `study.he
 
 Hanya beberapa isian yang berupa teks biasa, bukan pasangan `{ en, id }`, karena tidak diterjemahkan: `site.name`, `site.stickerSub`, `title` dan `issuer` di setiap sertifikat, `about.skills` (daftar teks), dan `about.song`.
 
-**Yang boleh dikosongkan** (hapus barisnya, tautan atau fotonya otomatis tidak muncul): `links.whatsapp` (angka saja dengan kode negara, tanpa `+`, spasi, atau `-`, misalnya `6281234567890`), `links.instagram` (alamat lengkap `https://instagram.com/...`), `coverPhoto` (foto latar cover; tanpa itu cover memakai gradasi), `cornerLeft` (label kecil di pojok kiri atas cover), `study.heading` (judul di atas timeline), dan `when` di tiap langkah timeline (tanggal yang belum diketahui).
+**Yang boleh dikosongkan** (hapus barisnya, tautan atau fotonya otomatis tidak muncul): `links.whatsapp` (angka saja dengan kode negara, tanpa `+`, spasi, atau `-`, misalnya `6281234567890`), `links.instagram` (alamat lengkap `https://instagram.com/...`), `coverPhoto` (foto latar cover; tanpa itu cover memakai gradasi), `cornerLeft` (label kecil di pojok kiri atas cover), `study.heading` (judul di atas timeline), `when` di tiap langkah timeline (tanggal yang belum diketahui), `site.cv` (tanpa itu tombol Download CV tidak muncul), dan `about.song` (tanpa itu kaset hanya bertuliskan "now playing"). Daftar `work.items` dan `certificates.items` boleh kosong (`[]`): foldernya disembunyikan, dan folder lain otomatis dinomori ulang.
 
 **Tautan** LinkedIn, GitHub, Instagram, dan `credentialUrl` harus alamat lengkap yang diawali `https://`. Alamat `http://` atau `javascript:` ditolak saat build.
 
@@ -44,7 +44,7 @@ Hanya beberapa isian yang berupa teks biasa, bukan pasangan `{ en, id }`, karena
 
 **Scan sertifikat.** Sama seperti foto: gambar scan-nya di `src/assets/`, lalu isi `image`. Kalau ada tautan kredensial online, isi `credentialUrl`. Kalau mau menyediakan PDF-nya, taruh di `public/certificates/nama.pdf` dan tulis `pdf: '/certificates/nama.pdf'`.
 
-**CV.** Ganti dua file di `public/cv/`: `cv-en.pdf` (English) dan `cv-id.pdf` (Indonesia). Pakai nama file yang sama, maka `content.ts` tidak perlu diubah. Tombol Download CV otomatis memberi CV sesuai bahasa yang sedang dipilih.
+**CV.** Taruh file CV di `public/cv/`, misalnya `cv-en.pdf` (English) dan `cv-id.pdf` (Indonesia), lalu tambahkan `cv: { en: '/cv/cv-en.pdf', id: '/cv/cv-id.pdf' },` di bagian `site` pada `content.ts`. Tombol Download CV (di cover dan footer) baru muncul setelah itu, dan otomatis memberi CV sesuai bahasa yang sedang dipilih.
 
 Kalau CV-mu cuma satu, arahkan keduanya ke file yang sama, lalu hapus file yang tidak dipakai:
 
@@ -112,13 +112,13 @@ Alamat yang tidak ada di situsmu (misalnya tautan yang salah ketik) menampilkan 
 
 ## 7. Jangan deploy dulu
 
-Jangan unggah situs ke internet sebelum isi aslinya masuk semua. Sebagai pengaman, build di Cloudflare berhenti dengan pesan `Not deploying the dummy content: src/data/content.ts still has placeholder text at ...` selama masih ada teks contoh di `content.ts` (misalnya "Teks dummy", "(contoh)", `example.com`, atau "Judul Lagu Favorit"). Pesannya menyebut letak setiap teks contoh yang tersisa. Build di komputermu sendiri tidak terpengaruh. Daftar periksa:
+Situs ini sudah tayang dengan isi yang asli saja (bagian yang belum diisi disembunyikan). Setiap `git push` ke GitHub otomatis membangun ulang situsnya di Cloudflare, jadi jangan push teks contoh. Sebagai pengaman, build di Cloudflare berhenti dengan pesan `Not deploying the dummy content: src/data/content.ts still has placeholder text at ...` selama masih ada teks contoh di `content.ts` (misalnya "Teks dummy", "(contoh)", `example.com`, atau "Judul Lagu Favorit"). Pesannya menyebut letak setiap teks contoh yang tersisa. Build di komputermu sendiri tidak terpengaruh. Daftar periksa:
 
 - [ ] Nama, teks, dan semua pasangan `en` / `id` di `src/data/content.ts` sudah asli.
 - [ ] Email, LinkedIn, GitHub (dan WhatsApp / Instagram kalau dipakai) sudah milikmu.
 - [ ] Foto sudah diganti, termasuk teks alt-nya.
 - [ ] Sertifikat dan proyek sudah asli.
-- [ ] `public/cv/cv-en.pdf` dan `cv-id.pdf` sudah CV asli.
+- [ ] Kalau `site.cv` diisi, file di `public/cv/` adalah CV asli.
 - [ ] `site` di `astro.config.mjs` sudah alamat yang benar.
 - [ ] `public/og.png` sudah dibuat ulang dengan cover yang asli.
 - [ ] `npm test`, `npm run build`, dan `npx playwright test` lulus. Tes tidak perlu diubah untuk isi aslimu (lihat [Tes dan isi aslimu](#tes-dan-isi-aslimu)).

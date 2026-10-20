@@ -52,7 +52,8 @@ for (const viewport of [...FIRST_SCREENS, ...KEY_INFO_ONLY]) {
         await openIn(page, lang);
         const pieces = {
           sticker: page.locator('.cover .sticker'),
-          'CV link': visibleCvLink(page),
+          // The Download CV button only shows once the content has a CV.
+          ...(siteContent().site.cv ? { 'CV link': visibleCvLink(page) } : {}),
           status: page.locator('.cover .status'),
         };
         for (const [name, locator] of Object.entries(pieces)) {
@@ -97,7 +98,7 @@ for (const viewport of VIEWPORTS) {
           '.cover-corner--right',
           '.cover-title',
           '.cover .status [data-l]',
-          '.cover .cv-link',
+          ...(siteContent().site.cv ? ['.cover .cv-link'] : []),
           '.cover .sticker b',
           '.cover .sticker small',
           // The note is hidden on a phone.
@@ -126,18 +127,26 @@ test.describe('cover content', () => {
 
   test('CV link follows language', async ({ page }) => {
     const { site, ui } = siteContent();
+    const { cv } = site;
+    test.skip(!cv, 'no CV in the content yet, so the button is not shown');
+    if (!cv) return;
     const link = visibleCvLink(page);
-    await expect(link).toHaveAttribute('href', site.cv.en);
+    await expect(link).toHaveAttribute('href', cv.en);
     await expect(link).toHaveAttribute('download', '');
     await expect(link).toContainText(ui.downloadCv.en);
-    await expectPdf(page.request, site.cv.en);
+    await expectPdf(page.request, cv.en);
 
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(link).toHaveAttribute('href', site.cv.id);
+    await expect(link).toHaveAttribute('href', cv.id);
     await expect(link).toHaveAttribute('download', '');
     await expect(link).toContainText(ui.downloadCv.id);
-    await expectPdf(page.request, site.cv.id);
+    await expectPdf(page.request, cv.id);
+  });
+
+  test('no Download CV button until there is a CV', async ({ page }) => {
+    test.skip(Boolean(siteContent().site.cv), 'the content has a CV');
+    await expect(page.locator('.cv-link')).toHaveCount(0);
   });
 
   // components.test.ts renders both cases from fixtures; this checks the one the content uses.

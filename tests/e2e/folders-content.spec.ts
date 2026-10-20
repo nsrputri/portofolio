@@ -1,10 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { containing, emphasised, plain, siteContent } from './helpers/content';
+import { containing, emphasised, plain, shownFolders, siteContent } from './helpers/content';
 import { gotoStatic, noHorizontalScroll } from './helpers/page';
 import { FIRST_SCREENS } from './helpers/viewports';
 
-const IDS = ['about', 'study', 'work', 'cert'] as const;
 const LANGS = ['en', 'id'] as const;
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
@@ -17,24 +16,24 @@ async function boxOf(locator: Locator) {
 }
 
 test.describe('folder shell', () => {
-  test('four folders in order with localized tabs', async ({ page }) => {
+  test('the shown folders in order with localized tabs', async ({ page }) => {
     await gotoStatic(page);
     const folders = page.locator('main.stack > section.folder');
-    await expect(folders).toHaveCount(4);
-    expect(await folders.evaluateAll((els) => els.map((el) => el.id))).toEqual([...IDS]);
+    await expect(folders).toHaveCount(shownFolders().length);
+    expect(await folders.evaluateAll((els) => els.map((el) => el.id))).toEqual(shownFolders());
 
     // Only the label of the active language is displayed, so ":visible" picks it.
     const { folders: names } = siteContent().ui;
     const labels = page.locator('main.stack > section.folder .folder-tab [data-l]:visible');
-    await expect(labels).toHaveText(IDS.map((id) => names[id].en));
+    await expect(labels).toHaveText(shownFolders().map((id) => names[id].en));
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(labels).toHaveText(IDS.map((id) => names[id].id));
+    await expect(labels).toHaveText(shownFolders().map((id) => names[id].id));
   });
 
   test('every folder has the structure the open/close animation relies on', async ({ page }) => {
     await gotoStatic(page);
-    for (const [index, id] of IDS.entries()) {
+    for (const [index, id] of shownFolders().entries()) {
       const folder = page.locator(`main.stack > section.folder#${id}`);
       await expect(folder, id).toHaveAttribute('data-index', String(index));
       await expect(folder.locator('button.folder-tab'), id).toHaveCount(1);
@@ -45,12 +44,9 @@ test.describe('folder shell', () => {
 
   test('folder colours and tab sides', async ({ page }) => {
     await gotoStatic(page);
-    const expected = [
-      { id: 'about', color: 'rgb(232, 200, 194)', tab: 'left' },
-      { id: 'study', color: 'rgb(218, 211, 195)', tab: 'right' },
-      { id: 'work', color: 'rgb(188, 202, 213)', tab: 'left' },
-      { id: 'cert', color: 'rgb(241, 230, 185)', tab: 'right' },
-    ];
+    // Each folder keeps its colour; tabs alternate from the left over the folders that are shown.
+    const colours = { about: 'rgb(232, 200, 194)', study: 'rgb(218, 211, 195)', work: 'rgb(188, 202, 213)', cert: 'rgb(241, 230, 185)' };
+    const expected = shownFolders().map((id, index) => ({ id, color: colours[id], tab: index % 2 === 0 ? 'left' : 'right' }));
     for (const { id, color, tab } of expected) {
       const folder = page.locator(`#${id}`);
       await expect(folder.locator('.folder-body'), id).toHaveCSS('background-color', color);
@@ -72,11 +68,8 @@ test.describe('folder shell', () => {
         if (lang === 'id') await idButton(page).click();
         await expect(page.locator('html')).toHaveAttribute('lang', lang);
 
-        for (const [current, next] of [
-          ['about', 'study'],
-          ['study', 'work'],
-          ['work', 'cert'],
-        ]) {
+        const ids = shownFolders();
+        for (const [current, next] of ids.slice(1).map((id, index) => [ids[index], id])) {
           const gap = await page.evaluate(
             ([cur, nxt]) => {
               const bottoms = [...document.querySelectorAll(`#${cur} .folder-content *`)]
@@ -167,7 +160,9 @@ test.describe('cover and folder stack', () => {
         if (lang === 'id') await idButton(page).click();
         await expect(page.locator('html')).toHaveAttribute('lang', lang);
         const note = await boxOf(page.locator('.cover .note'));
-        for (const selector of ['.cover .sticker', '.cover .cv-link:visible', '.cover .status']) {
+        // The Download CV button only shows once the content has a CV.
+        const pieces = ['.cover .sticker', ...(siteContent().site.cv ? ['.cover .cv-link:visible'] : []), '.cover .status'];
+        for (const selector of pieces) {
           const box = await boxOf(page.locator(selector));
           const overlaps = note.x < box.x + box.width && box.x < note.x + note.width && note.y < box.y + box.height && box.y < note.y + note.height;
           expect(overlaps, `${selector} ${JSON.stringify(box)} vs note ${JSON.stringify(note)}`).toBe(false);
@@ -248,7 +243,8 @@ test.describe('about me', () => {
     const cassette = page.locator('#about .cassette');
     await expect(cassette).toBeVisible();
     await expect(cassette).toHaveAttribute('aria-hidden', 'true');
-    await expect(cassette).toContainText(`now playing ♪ ${siteContent().about.song}`);
+    const { song } = siteContent().about;
+    await expect(cassette).toContainText(song ? `now playing ♪ ${song}` : 'now playing ♪');
   });
 
   // The cassette sits in the bottom right corner of the folder, where the last row of chips could run into it.
@@ -328,6 +324,10 @@ test.describe('study journey', () => {
 });
 
 test.describe('what I do', () => {
+  test.beforeEach(() => {
+    test.skip(siteContent().work.items.length === 0, 'What I Do is hidden until it has an item');
+  });
+
   const cards = (page: Page) => page.locator('#work .w-card');
 
   test('what I do cards show localized category', async ({ page }) => {
@@ -384,6 +384,10 @@ test.describe('what I do', () => {
 });
 
 test.describe('certificates', () => {
+  test.beforeEach(() => {
+    test.skip(siteContent().certificates.items.length === 0, 'Certificates is hidden until it has an item');
+  });
+
   const cards = (page: Page) => page.locator('#cert .c-card');
 
   test('certificates numbered in order', async ({ page }) => {
@@ -448,7 +452,7 @@ test.describe('on a phone (360px)', () => {
       await gotoStatic(page);
       if (lang === 'id') await idButton(page).click();
       await expect(page.locator('html')).toHaveAttribute('lang', lang);
-      await expect(page.locator('main.stack > section.folder')).toHaveCount(4);
+      await expect(page.locator('main.stack > section.folder')).toHaveCount(shownFolders().length);
 
       expect(await noHorizontalScroll(page)).toBe(true);
       expect(await boxesPastTheRightEdge(page)).toEqual([]);

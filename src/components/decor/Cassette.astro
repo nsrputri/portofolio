@@ -1,7 +1,7 @@
 ---
 interface Props {
   /** Title shown on the label. Plain text: a song name is not translated. */
-  song: string;
+  song?: string;
   class?: string;
 }
 
@@ -10,7 +10,7 @@ const { song, class: className } = Astro.props;
 
 <div class:list={['cassette', className]} aria-hidden="true">
   {/* "now playing" is decoration, kept in English in both languages. */}
-  <span class="cas-label">now playing ♪ {song}</span>
+  <span class="cas-label">now playing ♪{song && ` ${song}`}</span>
   <span class="reels"><i></i><i></i></span>
 </div>
 

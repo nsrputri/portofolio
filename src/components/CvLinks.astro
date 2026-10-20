@@ -2,7 +2,8 @@
 import type { Localized, SiteContent } from '../data/schema';
 
 interface Props {
-  cv: SiteContent['site']['cv'];
+  /** Only rendered when the content has a CV (the caller checks). */
+  cv: NonNullable<SiteContent['site']['cv']>;
   /** Link text, "Download CV" in both languages. */
   label: Localized;
 }

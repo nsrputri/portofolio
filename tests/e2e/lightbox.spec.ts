@@ -6,6 +6,9 @@ const LANGS = ['en', 'id'] as const;
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
 const dialog = (page: Page) => page.locator('#lightbox');
+/** The first card on the page that opens the lightbox, whichever folder it is in. */
+const anyCard = (page: Page) => page.locator('[data-lightbox]').first();
+const hasWork = () => siteContent().work.items.length > 0;
 const body = (page: Page) => page.locator('#lightbox .lightbox-body');
 const scrollY = (page: Page) => page.evaluate(() => window.scrollY);
 
@@ -85,6 +88,7 @@ test.describe('certificate details', () => {
   });
 
   test('opening another card replaces the content instead of adding to it', async ({ page }) => {
+    test.skip(!hasWork(), 'needs a What I Do card to switch to');
     const { certificates, work } = siteContent();
     await gotoStatic(page);
     await page.locator('.c-card').first().click();
@@ -100,6 +104,10 @@ test.describe('certificate details', () => {
 });
 
 test.describe('work details', () => {
+  test.beforeEach(() => {
+    test.skip(!hasWork(), 'What I Do is hidden until it has an item');
+  });
+
   test('keyboard opens a card', async ({ page }) => {
     const [item] = siteContent().work.items;
     await gotoStatic(page);
@@ -210,7 +218,7 @@ test.describe('closing', () => {
 
   test('a click inside the dialog does not close it', async ({ page }) => {
     await gotoStatic(page);
-    await page.locator('.w-card').first().click();
+    await anyCard(page).click();
     await expectOpen(page);
     await page.locator('.lightbox-body .lb-title').click();
     await expectOpen(page);
@@ -218,7 +226,7 @@ test.describe('closing', () => {
 
   test('a drag that starts inside and ends on the backdrop does not close it', async ({ page }) => {
     await gotoStatic(page);
-    await page.locator('.w-card').first().click();
+    await anyCard(page).click();
     await expectOpen(page);
     const title = await page.locator('.lightbox-body .lb-title').boundingBox();
     if (!title) throw new Error('expected the title to have a box');
@@ -234,11 +242,11 @@ test.describe('closing', () => {
       await gotoStatic(page);
       if (lang === 'id') await idButton(page).click();
       await expect(page.locator('html')).toHaveAttribute('lang', lang);
-      const card = page.locator('.w-card').first();
+      const card = anyCard(page);
       await card.click();
       await expectOpen(page);
       const close = page.locator('#lightbox button.lightbox-close');
-      await expect(close.locator('[data-l]:visible')).toHaveText(lang === 'en' ? 'Close' : 'Tutup');
+      await expect(close.locator('[data-l]:visible')).toHaveText(siteContent().ui.close[lang]);
       // The close button is where focus lands, so a keyboard user can leave straight away.
       await expect(close).toBeFocused();
       await close.click();
@@ -287,6 +295,7 @@ test.describe('on a phone (360px)', () => {
 
   for (const lang of LANGS) {
     test(`the dialog fits the screen and long details scroll inside it (${lang})`, async ({ page }) => {
+      test.skip(!hasWork(), 'uses a What I Do card, whose details are long text');
       await gotoStatic(page);
       if (lang === 'id') await idButton(page).click();
       await expect(page.locator('html')).toHaveAttribute('lang', lang);

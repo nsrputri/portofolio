@@ -3,6 +3,7 @@ import { Window } from 'happy-dom';
 import { beforeAll, describe, expect, it } from 'vitest';
 import Cover from '../../src/components/Cover.astro';
 import Footer from '../../src/components/Footer.astro';
+import AboutMe from '../../src/components/folders/AboutMe.astro';
 import Certificates from '../../src/components/folders/Certificates.astro';
 import StudyJourney from '../../src/components/folders/StudyJourney.astro';
 import WhatIDo from '../../src/components/folders/WhatIDo.astro';
@@ -72,6 +73,16 @@ describe('Cover', () => {
     expect(doc.querySelectorAll('.cover-corner--right')).toHaveLength(1);
   });
 
+  it('leaves the CV button out until there is a CV', async () => {
+    const { site, ui } = content((c) => {
+      delete c.site.cv;
+    });
+    const doc = await render(Cover, { site, ui });
+    expect(doc.querySelectorAll('.cv-link')).toHaveLength(0);
+    // The sticker and the status still make up the identity row.
+    expect(doc.querySelectorAll('.cover-id .sticker, .cover-id .status')).toHaveLength(2);
+  });
+
   it('gives each language its own CV', async () => {
     const { site, ui } = content((c) => {
       c.site.cv = { en: '/cv/fixture.pdf', id: '/cv/fixture-id.pdf' };
@@ -123,6 +134,16 @@ describe('Footer', () => {
       ['WhatsApp', 'https://wa.me/6281234567890', 'noopener'],
       ['Instagram', 'https://www.instagram.com/me', 'noopener'],
     ]);
+  });
+
+  it('leaves the CV link out until there is a CV', async () => {
+    const { site, ui } = content((c) => {
+      delete c.site.cv;
+    });
+    const doc = await render(Footer, { site, ui });
+    expect(doc.querySelectorAll('.cv-link')).toHaveLength(0);
+    // Email, LinkedIn and GitHub, with no empty item left for the CV.
+    expect(doc.querySelectorAll('.links > li')).toHaveLength(3);
   });
 
   it('shows the site address, the name and the CV links', async () => {
@@ -195,6 +216,21 @@ describe('WhatIDo', () => {
       [...(doc.getElementById(`lb-work-${n}`) as HTMLTemplateElement).content.querySelectorAll('img')].map((img) => img.getAttribute('alt')),
     );
     expect(alts).toEqual([['Photo', 'Two', 'Three'], ['Photo']]);
+  });
+});
+
+describe('AboutMe', () => {
+  it('names the song on the cassette, or just says "now playing" without one', async () => {
+    const label = async (song: string | undefined) => {
+      const { about } = content((c) => {
+        if (song === undefined) delete c.about.song;
+        else c.about.song = song;
+      });
+      const doc = await render(AboutMe, { about });
+      return doc.querySelector('.cas-label')?.textContent?.trim();
+    };
+    expect(await label('Lagu – Penyanyi')).toBe('now playing ♪ Lagu – Penyanyi');
+    expect(await label(undefined)).toBe('now playing ♪');
   });
 });
 

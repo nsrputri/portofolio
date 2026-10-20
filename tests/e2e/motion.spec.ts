@@ -1,8 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
+import { shownFolders } from './helpers/content';
 import { gotoStatic, idle, openIds } from './helpers/page';
 import { FIRST_SCREENS } from './helpers/viewports';
-
-const IDS = ['about', 'study', 'work', 'cert'] as const;
 
 /** The open line folders.ts is using, in px from the top of the viewport. */
 async function openLine(page: Page): Promise<number> {
@@ -37,7 +36,7 @@ async function putAboutAt(page: Page, offset: number): Promise<void> {
 async function scrollDownInSteps(page: Page): Promise<void> {
   for (let step = 0; step < 300; step++) {
     const open = await openIds(page);
-    expect(open, `open folders at step ${step}`).toEqual(IDS.slice(0, open.length));
+    expect(open, `open folders at step ${step}`).toEqual(shownFolders().slice(0, open.length));
     const atBottom = await page.evaluate(
       () => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1,
     );
@@ -54,7 +53,7 @@ test.describe('folder motion', () => {
     await expect(page.locator('html')).toHaveClass(/(^|\s)has-motion(\s|$)/);
     await idle(page);
     expect(await openIds(page)).toEqual([]);
-    for (const id of IDS) {
+    for (const id of shownFolders()) {
       // Inset 3.5vw on each side, with the contents out of sight.
       const inset = await page.locator(`#${id}`).evaluate((el) => {
         const style = getComputedStyle(el);
@@ -69,13 +68,13 @@ test.describe('folder motion', () => {
   test('scrolling down opens in order', async ({ page }) => {
     await page.goto('/');
     await scrollDownInSteps(page);
-    await expect.poll(() => openIds(page)).toEqual([...IDS]);
+    await expect.poll(() => openIds(page)).toEqual(shownFolders());
   });
 
   test('scrolling back to top closes all', async ({ page }) => {
     await page.goto('/');
     await scrollDownInSteps(page);
-    await expect.poll(() => openIds(page)).toEqual([...IDS]);
+    await expect.poll(() => openIds(page)).toEqual(shownFolders());
     await scrollTo(page, 0);
     await expect.poll(() => openIds(page), { timeout: 10_000 }).toEqual([]);
   });
@@ -140,10 +139,11 @@ test.describe('folder motion', () => {
 
   test('tab click opens folder and all above', async ({ page }) => {
     await page.goto('/');
-    await page.locator('#cert .folder-tab').click();
+    const last = shownFolders().at(-1)!;
+    await page.locator(`#${last} .folder-tab`).click();
     await idle(page);
-    expect(await openIds(page)).toEqual([...IDS]);
-    const top = await viewTop(page, 'cert');
+    expect(await openIds(page)).toEqual(shownFolders());
+    const top = await viewTop(page, last);
     expect(top).toBeGreaterThanOrEqual(-5);
     expect(top).toBeLessThanOrEqual(80);
   });
@@ -151,13 +151,13 @@ test.describe('folder motion', () => {
   test('End opens all, Home closes all', async ({ page }) => {
     await page.goto('/');
     await page.keyboard.press('End');
-    await expect.poll(() => openIds(page)).toEqual([...IDS]);
+    await expect.poll(() => openIds(page)).toEqual(shownFolders());
     await idle(page);
     // It lands at the real end of the page, and everything stays open there.
     expect(
       await page.evaluate(() => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 1),
     ).toBe(true);
-    expect(await openIds(page)).toEqual([...IDS]);
+    expect(await openIds(page)).toEqual(shownFolders());
 
     await page.keyboard.press('Home');
     await expect.poll(() => openIds(page), { timeout: 10_000 }).toEqual([]);
@@ -204,7 +204,7 @@ test.describe('folder motion', () => {
     await gotoStatic(page);
     await expect(page.locator('html')).not.toHaveClass(/(^|\s)has-motion(\s|$)/);
     const contents = page.locator('.folder-content');
-    await expect(contents).toHaveCount(4);
+    await expect(contents).toHaveCount(shownFolders().length);
     for (const content of await contents.all()) {
       await expect(content).toBeVisible();
       await expect(content).toHaveCSS('opacity', '1');
@@ -221,7 +221,7 @@ test.describe('folder tabs as disclosure buttons', () => {
   test('aria-expanded follows the open state', async ({ page }) => {
     await page.goto('/');
     await idle(page);
-    for (const id of IDS) {
+    for (const id of shownFolders()) {
       const tab = page.locator(`#${id} .folder-tab`);
       await expect(tab, id).toHaveAttribute('aria-expanded', 'false');
       const controls = await tab.getAttribute('aria-controls');
@@ -233,21 +233,23 @@ test.describe('folder tabs as disclosure buttons', () => {
     await putAboutAt(page, -10);
     await idle(page);
     await expect(page.locator('#about .folder-tab')).toHaveAttribute('aria-expanded', 'true');
-    for (const id of IDS.slice(1)) await expect(page.locator(`#${id} .folder-tab`), id).toHaveAttribute('aria-expanded', 'false');
+    for (const id of shownFolders().slice(1)) await expect(page.locator(`#${id} .folder-tab`), id).toHaveAttribute('aria-expanded', 'false');
 
     await scrollTo(page, 0);
     await idle(page);
     await expect(page.locator('#about .folder-tab')).toHaveAttribute('aria-expanded', 'false');
 
-    await page.locator('#work .folder-tab').click();
+    // The third folder's tab opens it and the two above; any folder below stays closed.
+    const ids = shownFolders();
+    await page.locator(`#${ids[2]} .folder-tab`).click();
     await idle(page);
     const expanded = await page.locator('.folder-tab').evaluateAll((tabs) => tabs.map((tab) => tab.getAttribute('aria-expanded')));
-    expect(expanded).toEqual(['true', 'true', 'true', 'false']);
+    expect(expanded).toEqual(ids.map((_, index) => String(index <= 2)));
   });
 
   test('every tab is expanded under reduced motion', async ({ page }) => {
     await gotoStatic(page);
-    for (const id of IDS) {
+    for (const id of shownFolders()) {
       await expect(page.locator(`#${id} .folder-tab`), id).toHaveAttribute('aria-expanded', 'true');
     }
   });
@@ -263,7 +265,7 @@ for (const viewport of FIRST_SCREENS) {
       await page.goto('/');
       await idle(page);
       expect(await openIds(page)).toEqual([]);
-      for (const id of IDS) {
+      for (const id of shownFolders()) {
         const box = await page.locator(`#${id} .folder-tab`).boundingBox();
         if (!box) throw new Error(`${id} tab has no box`);
         expect(box.y, `${id} tab top`).toBeGreaterThanOrEqual(0);

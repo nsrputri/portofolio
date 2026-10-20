@@ -1,10 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
-import { siteContent } from './helpers/content';
+import { shownFolders, siteContent } from './helpers/content';
 import { gotoStatic, idle, noHorizontalScroll, openIds } from './helpers/page';
 
 const LANGS = ['en', 'id'] as const;
-const IDS = ['about', 'study', 'work', 'cert'];
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
 
@@ -53,14 +52,17 @@ test.describe('footer links', () => {
 
   test('CV links follow language', async ({ page }) => {
     const { site, ui } = siteContent();
+    const { cv } = site;
+    test.skip(!cv, 'no CV in the content yet, so the link is not shown');
+    if (!cv) return;
     const link = page.locator('footer .cv-link:visible');
-    await expect(link).toHaveAttribute('href', site.cv.en);
+    await expect(link).toHaveAttribute('href', cv.en);
     await expect(link).toHaveAttribute('download', '');
     await expect(link).toContainText(ui.downloadCv.en);
 
     await idButton(page).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(link).toHaveAttribute('href', site.cv.id);
+    await expect(link).toHaveAttribute('href', cv.id);
     await expect(link).toContainText(ui.downloadCv.id);
   });
 });
@@ -145,15 +147,15 @@ for (const viewport of [
       await idle(page);
       expect(await openIds(page)).toEqual([]);
       // Folders open one at a time, and each one that opens makes the page longer, so keep going down.
-      for (let pass = 0; pass < 12 && (await openIds(page)).length < IDS.length; pass++) {
+      for (let pass = 0; pass < 12 && (await openIds(page)).length < shownFolders().length; pass++) {
         await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
         await idle(page);
       }
-      expect(await openIds(page)).toEqual(IDS);
+      expect(await openIds(page)).toEqual(shownFolders());
 
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await idle(page);
-      expect(await openIds(page)).toEqual(IDS);
+      expect(await openIds(page)).toEqual(shownFolders());
       expect(await gapBelowFooter(page)).toBeLessThanOrEqual(1);
       await expect(page.locator('footer')).toBeInViewport();
     });

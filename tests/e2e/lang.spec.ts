@@ -7,22 +7,22 @@ test.describe('language toggle', () => {
   });
 
   test('default is English', async ({ page }) => {
-    const { site, ui } = siteContent();
+    const { site } = siteContent();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.locator('.cover .cv-link[data-l="en"]')).toBeVisible();
-    await expect(page.locator('.cover .cv-link[data-l="en"]')).toContainText(ui.downloadCv.en);
-    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeHidden();
+    await expect(page.locator('.cover .status [data-l="en"]')).toBeVisible();
+    await expect(page.locator('.cover .status [data-l="en"]')).toHaveText(site.status.en);
+    await expect(page.locator('.cover .status [data-l="id"]')).toBeHidden();
     await expect(page).toHaveTitle(site.title.en);
   });
 
   test('toggle switches to Indonesian without reload', async ({ page }) => {
-    const { site, ui } = siteContent();
+    const { site } = siteContent();
     const origin = await page.evaluate(() => performance.timeOrigin);
     await page.getByRole('button', { name: 'ID', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeVisible();
-    await expect(page.locator('.cover .cv-link[data-l="id"]')).toContainText(ui.downloadCv.id);
-    await expect(page.locator('.cover .cv-link[data-l="en"]')).toBeHidden();
+    await expect(page.locator('.cover .status [data-l="id"]')).toBeVisible();
+    await expect(page.locator('.cover .status [data-l="id"]')).toHaveText(site.status.id);
+    await expect(page.locator('.cover .status [data-l="en"]')).toBeHidden();
     await expect(page).toHaveTitle(site.title.id);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', site.description.id);
     await expect(page.getByRole('button', { name: 'ID', exact: true })).toHaveAttribute('aria-pressed', 'true');
@@ -35,7 +35,7 @@ test.describe('language toggle', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
     await page.reload();
     await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-    await expect(page.locator('.cover .cv-link[data-l="id"]')).toBeVisible();
+    await expect(page.locator('.cover .status [data-l="id"]')).toBeVisible();
     await expect(page.getByRole('button', { name: 'ID', exact: true })).toHaveAttribute('aria-pressed', 'true');
   });
 

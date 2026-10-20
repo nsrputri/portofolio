@@ -11,29 +11,40 @@ import StudyJourney from '../components/folders/StudyJourney.astro';
 import WhatIDo from '../components/folders/WhatIDo.astro';
 import { content } from '../data/content';
 import { refuseDummyOnCloudflare } from '../data/deploy-guard';
+import { folderPlace, visibleFolders } from '../data/visible-folders';
 
 // A build on Cloudflare stops here while content.ts still holds any dummy text.
 refuseDummyOnCloudflare(content, process.env);
 
 const { folders } = content.ui;
+// What I Do and Certificates only show once they have an item; the rest renumber and keep alternating tabs.
+const shown = visibleFolders(content);
 ---
 
-<Base title={content.site.title} description={content.site.description}>
+<Base title={content.site.title} description={content.site.description} folderCount={shown.length}>
   <LangToggle label={content.ui.language} />
   <Cover site={content.site} ui={content.ui} />
   <main class="stack">
-    <Folder id="about" no={1} label={folders.about} color="pink" tab="left">
+    <Folder id="about" {...folderPlace(shown, 'about')} label={folders.about} color="pink">
       <AboutMe about={content.about} />
     </Folder>
-    <Folder id="study" no={2} label={folders.study} color="beige" tab="right">
+    <Folder id="study" {...folderPlace(shown, 'study')} label={folders.study} color="beige">
       <StudyJourney study={content.study} />
     </Folder>
-    <Folder id="work" no={3} label={folders.work} color="blue" tab="left">
-      <WhatIDo work={content.work} ui={content.ui} />
-    </Folder>
-    <Folder id="cert" no={4} label={folders.cert} color="butter" tab="right">
-      <Certificates certificates={content.certificates} ui={content.ui} />
-    </Folder>
+    {
+      shown.includes('work') && (
+        <Folder id="work" {...folderPlace(shown, 'work')} label={folders.work} color="blue">
+          <WhatIDo work={content.work} ui={content.ui} />
+        </Folder>
+      )
+    }
+    {
+      shown.includes('cert') && (
+        <Folder id="cert" {...folderPlace(shown, 'cert')} label={folders.cert} color="butter">
+          <Certificates certificates={content.certificates} ui={content.ui} />
+        </Folder>
+      )
+    }
   </main>
   <Footer site={content.site} ui={content.ui} />
   <Lightbox close={content.ui.close} />

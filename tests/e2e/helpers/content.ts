@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { SiteContent } from '../../../src/data/schema';
+import { type FolderId, visibleFolders } from '../../../src/data/visible-folders';
 import { EMPHASIS } from '../../../src/lib/rich';
 
 /** Where global-setup.ts saves the content for the tests (inside node_modules, so never committed). */
@@ -24,6 +25,11 @@ export function siteContent(): SiteContent {
     }
   }
   return cached;
+}
+
+/** The folder ids the page shows, in order (What I Do and Certificates only once they have items). */
+export function shownFolders(): FolderId[] {
+  return visibleFolders(siteContent());
 }
 
 /** A content string as it reads on the page: `*x*` loses its asterisks and a line break reads as a space. */

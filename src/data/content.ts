@@ -1,20 +1,11 @@
 // All user-visible content lives here and is validated at build time by schema.ts.
-// Filled in from bahan/ISI-KONTEN.md. What is still DUMMY (marked "Teks dummy", "(contoh)",
-// example.com and the placeholder images) waits for the owner's answers; a Cloudflare build refuses
-// to run until none is left (src/data/deploy-guard.ts).
+// Filled in from bahan/ISI-KONTEN.md. Sections still waiting for the owner are left out of the page:
+// What I Do and Certificates show once they have an item, the Download CV buttons once `cv` is set.
+// A Cloudflare build refuses to run while any dummy text is left (src/data/deploy-guard.ts).
 // `*word*` renders as emphasis, `\n` as a line break (see src/lib/rich.ts).
 import portrait from '../assets/foto/nisrina-potret.jpg';
 import coverPhoto from '../assets/foto/latar-cover.jpg';
 import certFiberOptik from '../assets/sertifikat/fiber-optik-bnsp.png';
-import work1 from '../assets/placeholders/work-1.jpg';
-import work1Extra1 from '../assets/placeholders/work-1-extra-1.jpg';
-import work1Extra2 from '../assets/placeholders/work-1-extra-2.jpg';
-import work2 from '../assets/placeholders/work-2.jpg';
-import work3 from '../assets/placeholders/work-3.jpg';
-import work4 from '../assets/placeholders/work-4.jpg';
-import cert2 from '../assets/placeholders/cert-2.jpg';
-import cert3 from '../assets/placeholders/cert-3.jpg';
-import cert4 from '../assets/placeholders/cert-4.jpg';
 import { parseContent, type SiteContent } from './schema';
 
 const portraitAlt = {
@@ -55,7 +46,6 @@ export const content: SiteContent = parseContent({
     portrait,
     portraitAlt,
     coverPhoto,
-    cv: { en: '/cv/cv-en.pdf', id: '/cv/cv-id.pdf' },
     links: {
       email: 'nisrinaputri2912@gmail.com',
       linkedin: 'https://www.linkedin.com/in/nisrinaputri2912',
@@ -124,7 +114,6 @@ export const content: SiteContent = parseContent({
       },
     ],
     skills: ['Mikrotik', 'Cisco Packet Tracer', 'Wireshark', 'Linux', 'Ubuntu'],
-    song: 'Judul Lagu Favorit',
   },
 
   // The owner's list, newest first. Steps without a date wait for one (when is optional).
@@ -178,86 +167,8 @@ export const content: SiteContent = parseContent({
       en: 'Practicums, projects, *and committees.*',
       id: 'Praktikum, proyek, *dan kepanitiaan.*',
     },
-    items: [
-      {
-        category: 'practicum',
-        title: {
-          en: 'Configuring a small office network with Mikrotik',
-          id: 'Konfigurasi jaringan kantor kecil dengan Mikrotik',
-        },
-        meta: { en: 'Networking Lab · 2024', id: 'Lab Jaringan · 2024' },
-        details: {
-          en: 'Dummy text. Describe the practicum: the task, the topology you built, the tools you used and what you learned.',
-          id: 'Teks dummy. Jelaskan praktikumnya: tugasnya, topologi yang kamu bangun, alat yang dipakai, dan apa yang kamu pelajari.',
-        },
-        photo: work1,
-        photoAlt: {
-          en: 'Placeholder photo of the Mikrotik practicum',
-          id: 'Foto praktikum Mikrotik (contoh)',
-        },
-        gallery: [
-          {
-            image: work1Extra1,
-            alt: { en: 'Placeholder photo 2 of the practicum', id: 'Foto praktikum 2 (contoh)' },
-          },
-          {
-            image: work1Extra2,
-            alt: { en: 'Placeholder photo 3 of the practicum', id: 'Foto praktikum 3 (contoh)' },
-          },
-        ],
-      },
-      {
-        category: 'project',
-        title: {
-          en: 'IoT-based server room temperature monitoring',
-          id: 'Monitoring suhu ruang server berbasis IoT',
-        },
-        meta: { en: 'Course project · 2025', id: 'Tugas mata kuliah · 2025' },
-        details: {
-          en: 'Dummy text. Describe the project: the problem, the sensors and dashboard you built, and the result.',
-          id: 'Teks dummy. Jelaskan proyeknya: masalahnya, sensor dan dashboard yang kamu buat, dan hasilnya.',
-        },
-        photo: work2,
-        photoAlt: {
-          en: 'Placeholder photo of the IoT project',
-          id: 'Foto proyek IoT (contoh)',
-        },
-      },
-      {
-        category: 'organization',
-        title: {
-          en: 'IT division of a campus event committee',
-          id: 'Divisi IT panitia acara kampus',
-        },
-        meta: { en: 'Committee · 2024', id: 'Panitia · 2024' },
-        details: {
-          en: 'Dummy text. Describe your role in the committee and what the IT division was responsible for.',
-          id: 'Teks dummy. Jelaskan perananmu di kepanitiaan dan apa tanggung jawab divisi IT.',
-        },
-        photo: work3,
-        photoAlt: {
-          en: 'Placeholder photo of the campus event',
-          id: 'Foto acara kampus (contoh)',
-        },
-      },
-      {
-        category: 'competition',
-        title: {
-          en: 'Network topology design competition',
-          id: 'Lomba desain topologi jaringan',
-        },
-        meta: { en: 'Finalist · 2025', id: 'Finalis · 2025' },
-        details: {
-          en: 'Dummy text. Describe the competition, your team and the design you presented.',
-          id: 'Teks dummy. Jelaskan lombanya, timmu, dan desain yang kamu presentasikan.',
-        },
-        photo: work4,
-        photoAlt: {
-          en: 'Placeholder photo of the competition',
-          id: 'Foto lomba (contoh)',
-        },
-      },
-    ],
+    // The owner's activities go here; the What I Do folder shows once there is at least one.
+    items: [],
   },
 
   certificates: {
@@ -270,37 +181,6 @@ export const content: SiteContent = parseContent({
         alt: {
           en: 'Certificate from LPK Pasopati for the BNSP-certified Fiber Optic Training, 11–13 March 2026, awarded to Nisrina Putri Fatimah Azzahra',
           id: 'Sertifikat LPK Pasopati untuk Training Fiber Optik Bersertifikasi BNSP, 11–13 Maret 2026, atas nama Nisrina Putri Fatimah Azzahra',
-        },
-      },
-      {
-        title: 'CCNA: Introduction to Networks',
-        issuer: 'Cisco NetAcad',
-        year: 2024,
-        image: cert2,
-        alt: {
-          en: 'Placeholder scan of the CCNA certificate',
-          id: 'Pindaian sertifikat CCNA (contoh)',
-        },
-        credentialUrl: 'https://example.com/credentials/ccna-itn',
-      },
-      {
-        title: 'Fiber Optic Fundamentals',
-        issuer: 'Example Training Institute',
-        year: 2025,
-        image: cert3,
-        alt: {
-          en: 'Placeholder scan of the fiber optic certificate',
-          id: 'Pindaian sertifikat fiber optik (contoh)',
-        },
-      },
-      {
-        title: 'Network Competition: 2nd Place',
-        issuer: 'Example Organizer',
-        year: 2025,
-        image: cert4,
-        alt: {
-          en: 'Placeholder scan of the competition certificate',
-          id: 'Pindaian sertifikat lomba (contoh)',
         },
       },
     ],

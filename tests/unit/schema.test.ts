@@ -1,5 +1,6 @@
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseContent as parseWith } from '../../src/data/schema';
+import { existsInPublic, parseContent as parseWith } from '../../src/data/schema';
 import { content } from '../../src/data/content';
 import { FIXTURE_PUBLIC, type Fixture, fixtureContent } from './fixtures';
 
@@ -225,10 +226,8 @@ describe('files under public/', () => {
   });
 
   it('checks the real public/ folder when no folder is given', () => {
-    const real = mutated((c) => {
-      c.site.cv = { ...content.site.cv };
-    });
-    expect(() => parseWith(real)).not.toThrow();
+    // favicon.svg is always in public/; a PDF of the owner's is not, so this test does not lean on one.
+    expect(existsInPublic('/favicon.svg', join(process.cwd(), 'public'))).toBe(true);
     const missing = mutated((c) => {
       c.site.cv.en = '/cv/definitely-not-here.pdf';
     });
@@ -273,6 +272,20 @@ describe('optional content', () => {
     });
     expect(parsed.work.items[0].gallery).toHaveLength(1);
     expect(parsed.study.items[0].current).toBe(true);
+  });
+
+  it('lets What I Do and Certificates be empty, and the CV and the song be left out', () => {
+    const raw = mutated((c) => {
+      c.work.items = [];
+      c.certificates.items = [];
+      delete c.site.cv;
+      delete c.about.song;
+    });
+    const parsed = parseContent(raw);
+    expect(parsed.work.items).toEqual([]);
+    expect(parsed.certificates.items).toEqual([]);
+    expect(parsed.site.cv).toBeUndefined();
+    expect(parsed.about.song).toBeUndefined();
   });
 
   it('lets the corner label, the study heading and a step date be left out', () => {

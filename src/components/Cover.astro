@@ -56,7 +56,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
 
   <div class="cover-id">
     <Sticker name={site.name} sub={site.stickerSub} />
-    <CvLinks cv={site.cv} label={ui.downloadCv} />
+    {site.cv && <CvLinks cv={site.cv} label={ui.downloadCv} />}
     <span class="status"><i aria-hidden="true"></i><T text={site.status} /></span>
   </div>
 </header>

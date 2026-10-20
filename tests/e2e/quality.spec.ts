@@ -1,9 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import { test, expect, type Page } from '@playwright/test';
+import { shownFolders, siteContent } from './helpers/content';
 import { gotoStatic, idle, noHorizontalScroll, openIds } from './helpers/page';
 
 const LANGS = ['en', 'id'] as const;
-const FOLDER_IDS = ['about', 'study', 'work', 'cert'];
 
 const idButton = (page: Page) => page.getByRole('button', { name: 'ID', exact: true });
 
@@ -18,7 +18,7 @@ async function axeViolations(page: Page, impacts: ('serious' | 'critical')[] = [
 /** Scrolls down until every folder has opened, then to the very bottom, and lets the page settle. */
 async function openEverythingByScrolling(page: Page): Promise<void> {
   // Each folder that opens makes the page longer, so keep going down until all four are open.
-  for (let pass = 0; pass < 16 && (await openIds(page)).length < FOLDER_IDS.length; pass++) {
+  for (let pass = 0; pass < 16 && (await openIds(page)).length < shownFolders().length; pass++) {
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await idle(page);
   }
@@ -47,7 +47,7 @@ test.describe('small screens', () => {
       expect(await noHorizontalScroll(page), 'closed stack').toBe(true);
 
       await openEverythingByScrolling(page);
-      expect(await openIds(page)).toEqual(FOLDER_IDS);
+      expect(await openIds(page)).toEqual(shownFolders());
       expect(await noHorizontalScroll(page), 'every folder open').toBe(true);
     });
   }
@@ -77,13 +77,13 @@ for (const viewport of [
   test.describe(`language toggle vs folder tabs at ${viewport.width}px`, () => {
     test.use({ viewport });
 
-    for (const id of FOLDER_IDS) {
+    for (const id of shownFolders()) {
       test(`the toggle does not cover the ${id} tab after jumping to it`, async ({ page }) => {
         await page.goto('/');
         await idle(page);
         await page.locator(`#${id} .folder-tab`).click();
         await idle(page);
-        expect((await openIds(page)).length, 'the tab opened its folder').toBeGreaterThan(FOLDER_IDS.indexOf(id));
+        expect((await openIds(page)).length, 'the tab opened its folder').toBeGreaterThan(shownFolders().indexOf(id));
 
         const tab = await page.locator(`#${id} .folder-tab`).boundingBox();
         const toggle = await page.locator('.lang-toggle').boundingBox();
@@ -117,6 +117,8 @@ test.describe('accessibility (axe)', () => {
   for (const lang of LANGS) {
     for (const card of ['.w-card', '.c-card']) {
       test(`no serious a11y violations with the lightbox open on a ${card} (${lang})`, async ({ page }) => {
+        const { work, certificates } = siteContent();
+        test.skip((card === '.w-card' ? work : certificates).items.length === 0, 'that folder is hidden until it has an item');
         await page.addInitScript((value) => localStorage.setItem('lang', value), lang);
         await gotoStatic(page);
         await page.locator(card).first().click();
@@ -139,7 +141,7 @@ test.describe('accessibility (axe)', () => {
     // to a landmark, the visually hidden "Language" label of the toggle included.
     const { violations } = await new AxeBuilder({ page }).withRules(['region']).analyze();
     expect(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([]);
-    await expect(page.getByRole('region', { name: 'Language' })).toBeVisible();
+    await expect(page.getByRole('region', { name: siteContent().ui.language.en })).toBeVisible();
   });
 
   test('lists keep their list role although list-style is none', async ({ page }) => {
@@ -221,12 +223,12 @@ test.describe('when the folder script fails', () => {
     await expect(page.locator('html')).toHaveClass(/(^|\s)has-motion(\s|$)/);
     await expect(page.locator('html')).not.toHaveAttribute('data-folders-line', /.*/);
 
-    for (const id of FOLDER_IDS) {
+    for (const id of shownFolders()) {
       await expect(page.locator(`#${id} .folder-content`), id).toBeVisible({ timeout: 5000 });
     }
     await expect(page.locator('html')).not.toHaveClass(/has-motion/);
     // Every folder is open and nothing hangs over the sides.
-    for (const id of FOLDER_IDS) {
+    for (const id of shownFolders()) {
       const inset = await page.locator(`#${id}`).evaluate((el) => parseFloat(getComputedStyle(el).marginLeft));
       expect(inset, `${id} inset`).toBe(0);
     }
@@ -251,7 +253,7 @@ test.describe('print', () => {
     await expect(page.locator('#about .folder-content')).toBeHidden();
 
     await page.emulateMedia({ media: 'print' });
-    for (const id of FOLDER_IDS) {
+    for (const id of shownFolders()) {
       await expect(page.locator(`#${id} .folder-content`), id).toBeVisible();
       const body = await page.locator(`#${id} .folder-body`).evaluate((el) => ({
         height: el.getBoundingClientRect().height,

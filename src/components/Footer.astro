@@ -37,7 +37,7 @@ const external = [
           </li>
         ))
       }
-      <li><CvLinks cv={site.cv} label={ui.downloadCv} /></li>
+      {site.cv && <li><CvLinks cv={site.cv} label={ui.downloadCv} /></li>}
     </ul>
   </div>
 </footer>

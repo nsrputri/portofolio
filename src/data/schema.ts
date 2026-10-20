@@ -112,7 +112,8 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
       portrait: image,
       portraitAlt: localized,
       coverPhoto: image.optional(),
-      cv: z.strictObject({ en: cvPath, id: cvPath }),
+      /** Leave it out until there is a CV: the Download CV buttons are then not shown. */
+      cv: z.strictObject({ en: cvPath, id: cvPath }).optional(),
       links: z.strictObject({
         email: z.email(),
         linkedin: httpsUrl,
@@ -148,7 +149,8 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
       caption: localized,
       facts: z.array(z.strictObject({ label: localized, value: localized })).min(1),
       skills: z.array(z.string().trim().min(1)).min(1),
-      song: z.string().trim().min(1),
+      /** Leave it out for a cassette that just says "now playing". */
+      song: z.string().trim().min(1).optional(),
     }),
     study: z.strictObject({
       kicker: localized,
@@ -169,10 +171,12 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
     work: z.strictObject({
       kicker: localized,
       heading: localized,
-      items: z.array(workItem).min(1),
+      /** While empty, the What I Do folder is not shown (see visible-folders.ts). */
+      items: z.array(workItem),
     }),
     certificates: z.strictObject({
-      items: z.array(certificate).min(1),
+      /** While empty, the Certificates folder is not shown (see visible-folders.ts). */
+      items: z.array(certificate),
     }),
   });
 }
