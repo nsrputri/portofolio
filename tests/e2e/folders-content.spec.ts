@@ -321,7 +321,8 @@ test.describe('study journey', () => {
       await expect(kicker, lang).toHaveText(study.kicker[lang]);
       await expect(titles, lang).toHaveText(study.items.map((item) => item.title[lang]));
       await expect(texts, lang).toHaveText(study.items.map((item) => item.text[lang]));
-      await expect(emphasis, lang).toHaveText(emphasised(study.heading[lang]));
+      // The heading is optional; without one there is no emphasis to find.
+      await expect(emphasis, lang).toHaveText(study.heading ? emphasised(study.heading[lang]) : []);
     }
   });
 });

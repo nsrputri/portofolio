@@ -28,7 +28,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
           alt={DECORATIVE_ALT}
           loading="eager"
           fetchpriority="high"
-          widths={[640, 1280, 1920]}
+          quality={60}
+          widths={[640, 828, 1280, 1920]}
           sizes="100vw"
         />
       )
@@ -36,7 +37,7 @@ const DECORATIVE_ALT = { en: '', id: '' };
   </div>
 
   <div class="cover-corners">
-    <p class="cover-corner cover-corner--left"><T text={site.cornerLeft} rich /></p>
+    {site.cornerLeft && <p class="cover-corner cover-corner--left"><T text={site.cornerLeft} rich /></p>}
     <p class="cover-corner cover-corner--right"><T text={site.cornerRight} rich /></p>
   </div>
 
@@ -140,6 +141,8 @@ const DECORATIVE_ALT = { en: '', id: '' };
   }
 
   .cover-corner--right {
+    /* Stays in the right corner when there is no left label. */
+    margin-left: auto;
     text-align: right;
   }
 
@@ -265,6 +268,10 @@ const DECORATIVE_ALT = { en: '', id: '' };
   @media (max-height: 720px) {
     .cover-title {
       margin-top: clamp(14px, 3vh, 28px);
+    }
+
+    .cover-id {
+      padding-top: 12px;
     }
   }
 

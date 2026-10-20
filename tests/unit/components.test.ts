@@ -63,6 +63,15 @@ describe('Cover', () => {
     expect(backdrop[0].getAttribute('fetchpriority')).toBe('high');
   });
 
+  it('leaves the left corner out when it has no label, keeping the right one', async () => {
+    const { site, ui } = content((c) => {
+      delete c.site.cornerLeft;
+    });
+    const doc = await render(Cover, { site, ui });
+    expect(doc.querySelectorAll('.cover-corner--left')).toHaveLength(0);
+    expect(doc.querySelectorAll('.cover-corner--right')).toHaveLength(1);
+  });
+
   it('gives each language its own CV', async () => {
     const { site, ui } = content((c) => {
       c.site.cv = { en: '/cv/fixture.pdf', id: '/cv/fixture-id.pdf' };
@@ -199,5 +208,34 @@ describe('StudyJourney', () => {
     const items = [...doc.querySelectorAll('.timeline li')];
     expect(items.map((li) => li.classList.contains('now'))).toEqual([false, true, false]);
     expect(items.map((li) => li.getAttribute('aria-current'))).toEqual([null, 'step', null]);
+  });
+
+  it('splits a long journey into even rows', async () => {
+    const step = { title: { en: 't', id: 't' }, text: { en: 'x', id: 'x' } };
+    const columnsFor = async (count: number) => {
+      const { study } = content((c) => {
+        c.study.items = Array.from({ length: count }, () => ({ ...step }));
+      });
+      const doc = await render(StudyJourney, { study });
+      return doc.querySelector('.timeline')?.getAttribute('style');
+    };
+    expect(await columnsFor(4)).toBe('--columns:4');
+    expect(await columnsFor(5)).toBe('--columns:5');
+    expect(await columnsFor(6)).toBe('--columns:3');
+    expect(await columnsFor(7)).toBe('--columns:4');
+  });
+
+  it('leaves out a missing heading and a missing date', async () => {
+    const { study } = content((c) => {
+      delete c.study.heading;
+      c.study.items = [
+        { title: { en: 'No date', id: 'Tanpa tanggal' }, text: { en: 'x', id: 'x' } },
+        { when: { en: '2024', id: '2024' }, title: { en: 't', id: 't' }, text: { en: 'x', id: 'x' } },
+      ];
+    });
+    const doc = await render(StudyJourney, { study });
+    expect(doc.querySelectorAll('.study h2')).toHaveLength(0);
+    const dates = [...doc.querySelectorAll('.timeline li')].map((li) => li.querySelectorAll('.when').length);
+    expect(dates).toEqual([0, 1]);
   });
 });

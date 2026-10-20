@@ -92,7 +92,8 @@ for (const viewport of VIEWPORTS) {
       test(`cover text meets WCAG AA contrast (${lang})`, async ({ page }) => {
         await openIn(page, lang);
         const selectors = [
-          '.cover-corner--left',
+          // The left corner label is optional.
+          ...(siteContent().site.cornerLeft ? ['.cover-corner--left'] : []),
           '.cover-corner--right',
           '.cover-title',
           '.cover .status [data-l]',

@@ -2,7 +2,7 @@
 
 Situs portofolio satu halaman, dua bahasa (English sebagai bawaan, tombol `EN | ID` untuk Bahasa Indonesia). Dibuat dengan [Astro](https://astro.build). Folder About, Study, What I Do, dan Certificates terbuka satu per satu saat halaman di-scroll.
 
-> **Saat ini semua isinya masih contoh** (nama `NAMA KAMU`, foto kotak abu-abu, CV dan sertifikat palsu). Baca bagian [Jangan deploy dulu](#7-jangan-deploy-dulu) sebelum mengunggah situs ke internet.
+> **Sebagian isi masih contoh** (bagian What I Do, sertifikat 2–4, lagu di kaset, dan file CV). Isian dari pemilik dikumpulkan di `bahan/ISI-KONTEN.md` (folder itu tidak ikut ke GitHub). Baca bagian [Jangan deploy dulu](#7-jangan-deploy-dulu) sebelum mengunggah situs ke internet.
 
 ## 1. Persiapan
 
@@ -34,7 +34,7 @@ Di tagline, label sudut cover, dan judul tiap bagian (`about.heading`, `study.he
 
 Hanya beberapa isian yang berupa teks biasa, bukan pasangan `{ en, id }`, karena tidak diterjemahkan: `site.name`, `site.stickerSub`, `title` dan `issuer` di setiap sertifikat, `about.skills` (daftar teks), dan `about.song`.
 
-**Yang boleh dikosongkan** (hapus barisnya, tautan atau fotonya otomatis tidak muncul): `links.whatsapp` (angka saja dengan kode negara, tanpa `+`, spasi, atau `-`, misalnya `6281234567890`), `links.instagram` (alamat lengkap `https://instagram.com/...`), dan `coverPhoto` (foto latar cover; tanpa itu cover memakai gradasi).
+**Yang boleh dikosongkan** (hapus barisnya, tautan atau fotonya otomatis tidak muncul): `links.whatsapp` (angka saja dengan kode negara, tanpa `+`, spasi, atau `-`, misalnya `6281234567890`), `links.instagram` (alamat lengkap `https://instagram.com/...`), `coverPhoto` (foto latar cover; tanpa itu cover memakai gradasi), `cornerLeft` (label kecil di pojok kiri atas cover), `study.heading` (judul di atas timeline), dan `when` di tiap langkah timeline (tanggal yang belum diketahui).
 
 **Tautan** LinkedIn, GitHub, Instagram, dan `credentialUrl` harus alamat lengkap yang diawali `https://`. Alamat `http://` atau `javascript:` ditolak saat build.
 
@@ -112,7 +112,7 @@ Alamat yang tidak ada di situsmu (misalnya tautan yang salah ketik) menampilkan 
 
 ## 7. Jangan deploy dulu
 
-Jangan unggah situs ke internet sebelum isi aslinya masuk semua. Sebagai pengaman, build di Cloudflare berhenti dengan pesan `Not deploying the dummy content: site.name in src/data/content.ts is still "NAMA KAMU"` selama `site.name` masih nama contoh. Build di komputermu sendiri tidak terpengaruh. Daftar periksa:
+Jangan unggah situs ke internet sebelum isi aslinya masuk semua. Sebagai pengaman, build di Cloudflare berhenti dengan pesan `Not deploying the dummy content: src/data/content.ts still has placeholder text at ...` selama masih ada teks contoh di `content.ts` (misalnya "Teks dummy", "(contoh)", `example.com`, atau "Judul Lagu Favorit"). Pesannya menyebut letak setiap teks contoh yang tersisa. Build di komputermu sendiri tidak terpengaruh. Daftar periksa:
 
 - [ ] Nama, teks, dan semua pasangan `en` / `id` di `src/data/content.ts` sudah asli.
 - [ ] Email, LinkedIn, GitHub (dan WhatsApp / Instagram kalau dipakai) sudah milikmu.

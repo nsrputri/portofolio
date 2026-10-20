@@ -12,8 +12,8 @@ import WhatIDo from '../components/folders/WhatIDo.astro';
 import { content } from '../data/content';
 import { refuseDummyOnCloudflare } from '../data/deploy-guard';
 
-// A build on Cloudflare stops here while content.ts still holds the dummy content.
-refuseDummyOnCloudflare(content.site.name, process.env);
+// A build on Cloudflare stops here while content.ts still holds any dummy text.
+refuseDummyOnCloudflare(content, process.env);
 
 const { folders } = content.ui;
 ---

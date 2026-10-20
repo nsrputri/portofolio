@@ -102,7 +102,8 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
       stickerSub: z.string().trim().min(1),
       title: localized,
       description: localized,
-      cornerLeft: localized,
+      /** Small label in the cover's top-left corner. Leave it out for no label there. */
+      cornerLeft: localized.optional(),
       cornerRight: localized,
       tagline: localized,
       note: localized,
@@ -151,11 +152,13 @@ export function contentSchema(publicDir: string = PUBLIC_DIR) {
     }),
     study: z.strictObject({
       kicker: localized,
-      heading: localized,
+      /** Leave it out for a timeline with no heading above it. */
+      heading: localized.optional(),
       items: z
         .array(
           z.strictObject({
-            when: localized,
+            /** Leave it out when the step has no date yet. */
+            when: localized.optional(),
             title: localized,
             text: localized,
             current: z.boolean().default(false),

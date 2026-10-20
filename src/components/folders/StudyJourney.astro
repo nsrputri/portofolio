@@ -7,18 +7,19 @@ interface Props {
 }
 
 const { study } = Astro.props;
-// One row up to five steps; a longer journey wraps onto further rows.
-const columns = Math.min(study.items.length, 5);
+// One row up to five steps; a longer journey is split into even rows (six steps make 3 + 3, not 5 + 1).
+const rows = Math.ceil(study.items.length / 5);
+const columns = Math.ceil(study.items.length / rows);
 ---
 
 <div class="study">
   <p class="kicker"><T text={study.kicker} /></p>
-  <h2 class="h-serif"><T text={study.heading} rich /></h2>
+  {study.heading && <h2 class="h-serif"><T text={study.heading} rich /></h2>}
   <ol class="timeline" role="list" style={`--columns:${columns}`}>
     {
       study.items.map((item) => (
         <li class:list={['pop', { now: item.current }]} aria-current={item.current ? 'step' : undefined}>
-          <span class="when"><T text={item.when} /></span>
+          {item.when && <span class="when"><T text={item.when} /></span>}
           <b><T text={item.title} /></b>
           <p><T text={item.text} /></p>
         </li>

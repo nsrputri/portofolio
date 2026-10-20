@@ -19,6 +19,9 @@ const { name, sub, size = 'sm' } = Astro.props;
 <style>
   .sticker {
     display: inline-grid;
+    /* As wide as the name or the barcode; a longer sub-line wraps inside instead of widening the
+       sticker and pushing the CV button and status onto extra rows. */
+    width: min-content;
     gap: 5px;
     padding: 10px 14px 8px;
     border-radius: 3px;
@@ -31,10 +34,11 @@ const { name, sub, size = 'sm' } = Astro.props;
   .sticker b {
     font: 500 15px var(--mono);
     letter-spacing: 0.14em;
+    white-space: nowrap;
   }
 
   .sticker small {
-    font: 500 9.5px var(--mono);
+    font: 500 9.5px / 1.35 var(--mono);
     letter-spacing: 0.12em;
     color: #55524d;
   }
@@ -54,6 +58,16 @@ const { name, sub, size = 'sm' } = Astro.props;
       #1d1d1d 12px 13px,
       transparent 13px 16px
     );
+  }
+
+  /* Beyond a phone there is room for a slightly wider sticker, so a long sub-line takes two lines
+     instead of three and the sticker stays short. It never gets narrower than the name. */
+  @media (min-width: 681px) {
+    .sticker {
+      width: max-content;
+      max-width: 200px;
+      min-width: min-content;
+    }
   }
 
   .sticker--lg b {

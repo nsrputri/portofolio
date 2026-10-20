@@ -275,6 +275,18 @@ describe('optional content', () => {
     expect(parsed.study.items[0].current).toBe(true);
   });
 
+  it('lets the corner label, the study heading and a step date be left out', () => {
+    const raw = mutated((c) => {
+      delete c.site.cornerLeft;
+      delete c.study.heading;
+      delete c.study.items[0].when;
+    });
+    const parsed = parseContent(raw);
+    expect(parsed.site.cornerLeft).toBeUndefined();
+    expect(parsed.study.heading).toBeUndefined();
+    expect(parsed.study.items[0].when).toBeUndefined();
+  });
+
   it('accepts one CV file for both languages', () => {
     const raw = mutated((c) => {
       c.site.cv = { en: '/cv/fixture.pdf', id: '/cv/fixture.pdf' };
