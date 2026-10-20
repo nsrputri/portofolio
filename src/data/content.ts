@@ -1,63 +1,67 @@
 // All user-visible content lives here and is validated at build time by schema.ts.
-// Everything below is DUMMY text and placeholder images. Replace it before launch.
+// Filled in from bahan/ISI-KONTEN.md. What is still DUMMY (marked "Teks dummy", "(contoh)",
+// example.com and the placeholder images) waits for the owner's answers; a Cloudflare build refuses
+// to run until none is left (src/data/deploy-guard.ts).
 // `*word*` renders as emphasis, `\n` as a line break (see src/lib/rich.ts).
-import portrait from '../assets/placeholders/portrait.jpg';
+import portrait from '../assets/foto/nisrina-potret.jpg';
+import coverPhoto from '../assets/foto/latar-cover.jpg';
+import certFiberOptik from '../assets/sertifikat/fiber-optik-bnsp.png';
 import work1 from '../assets/placeholders/work-1.jpg';
 import work1Extra1 from '../assets/placeholders/work-1-extra-1.jpg';
 import work1Extra2 from '../assets/placeholders/work-1-extra-2.jpg';
 import work2 from '../assets/placeholders/work-2.jpg';
 import work3 from '../assets/placeholders/work-3.jpg';
 import work4 from '../assets/placeholders/work-4.jpg';
-import cert1 from '../assets/placeholders/cert-1.jpg';
 import cert2 from '../assets/placeholders/cert-2.jpg';
 import cert3 from '../assets/placeholders/cert-3.jpg';
 import cert4 from '../assets/placeholders/cert-4.jpg';
 import { parseContent, type SiteContent } from './schema';
 
+const portraitAlt = {
+  en: 'Portrait of Nisrina Putri in a white dress and a beige hijab',
+  id: 'Potret Nisrina Putri mengenakan gamis putih dan hijab krem',
+};
+
 export const content: SiteContent = parseContent({
   site: {
-    name: 'NAMA KAMU',
-    stickerSub: 'TRI · DTEDI · UGM',
+    name: 'NISRINA PUTRI',
+    stickerSub: 'Teknologi Rekayasa Internet · DTEDI · UGM',
     title: {
-      en: 'Your Name · Internet Engineering Portfolio',
-      id: 'Nama Kamu · Portofolio Teknologi Rekayasa Internet',
+      en: 'Nisrina Putri · Internet Engineering Technology Portfolio',
+      id: 'Nisrina Putri · Portofolio Teknologi Rekayasa Internet',
     },
     description: {
-      en: 'Portfolio of an Internet Engineering Technology student at UGM, open to internships in internet and networking.',
-      id: 'Portofolio mahasiswa Teknologi Rekayasa Internet UGM yang terbuka untuk magang di bidang internet dan jaringan.',
-    },
-    cornerLeft: {
-      en: 'PORTFOLIO 2026\nINTERNET ENGINEERING TECHNOLOGY',
-      id: 'PORTFOLIO 2026\nTEKNOLOGI REKAYASA INTERNET',
+      en: 'Portfolio of Nisrina Putri, an Internet Engineering Technology student at UGM, open to internships in internet and networking.',
+      id: 'Portofolio Nisrina Putri, mahasiswi Teknologi Rekayasa Internet UGM yang terbuka untuk magang di bidang internet dan jaringan.',
     },
     cornerRight: {
-      en: 'FULL NAME\nUGM · VOCATIONAL SCHOOL',
-      id: 'NAMA LENGKAP\nUGM · SEKOLAH VOKASI',
+      en: 'NISRINA PUTRI FATIMAH AZZAHRA\nUGM · VOCATIONAL SCHOOL',
+      id: 'NISRINA PUTRI FATIMAH AZZAHRA\nUGM · SEKOLAH VOKASI',
     },
+    // Written in English by the owner; kept in English in both languages, like the reference design.
     tagline: {
-      en: 'stay *curious*,\nstay *connected*',
-      id: 'tetap *penasaran*,\ntetap *terhubung*',
+      en: 'small steps *forward*,\nendless *possibilities*.',
+      id: 'small steps *forward*,\nendless *possibilities*.',
     },
     note: {
-      en: "Hi! I'm a TRI student looking for an internship in internet & networking :)",
-      id: 'Hai! Aku mahasiswa TRI yang lagi cari tempat magang di bidang internet & jaringan :)',
+      en: "Hi! I'm a 5th-semester TRI UGM student, ready to dive into the internet & networking industry :)",
+      id: 'Hai! Aku mahasiswi TRI UGM semester 5 yang siap terjun ke industri internet & jaringan :)',
     },
-    status: { en: 'Open to internship', id: 'Terbuka untuk magang' },
+    status: { en: 'Open for internship', id: 'Terbuka untuk magang' },
     thanks: {
       en: "Thanks for stopping by! I'm open to internship opportunities in internet & networking.",
       id: 'Terima kasih sudah mampir! Aku terbuka untuk kesempatan magang di bidang internet & jaringan.',
     },
     portrait,
-    portraitAlt: {
-      en: 'Placeholder portrait of the site owner',
-      id: 'Foto potret pemilik situs (contoh)',
-    },
+    portraitAlt,
+    coverPhoto,
     cv: { en: '/cv/cv-en.pdf', id: '/cv/cv-id.pdf' },
     links: {
-      email: 'nama@example.com',
-      linkedin: 'https://www.linkedin.com/in/namakamu',
-      github: 'https://github.com/namakamu',
-      whatsapp: '6281234567890',
+      email: 'nisrinaputri2912@gmail.com',
+      linkedin: 'https://www.linkedin.com/in/nisrinaputri2912',
+      github: 'https://github.com/nsrputri',
+      whatsapp: '6287818126030',
+      instagram: 'https://www.instagram.com/nsrputrii/',
     },
   },
 
@@ -83,18 +87,15 @@ export const content: SiteContent = parseContent({
   about: {
     kicker: { en: '// about me', id: '// tentang aku' },
     heading: {
-      en: "I'm *Your Name*, an Internet Engineering Technology student who loves tinkering with networks.",
-      id: 'Aku *Nama Kamu*, mahasiswa Teknologi Rekayasa Internet yang senang ngulik jaringan.',
+      en: "I'm *Nisrina Putri*, an Internet Engineering Technology student with a strong drive to dig deep into network infrastructure and technology.",
+      id: 'Aku *Nisrina Putri*, mahasiswi Teknologi Rekayasa Internet dengan minat tinggi untuk mendalami bidang infrastruktur jaringan dan teknologi.',
     },
     intro: {
-      en: 'Dummy text. Briefly tell who you are, why you are drawn to networking and the internet, and what kind of internship you are looking for.',
-      id: 'Teks dummy. Ceritakan singkat siapa kamu, kenapa tertarik ke dunia jaringan dan internet, dan magang seperti apa yang sedang kamu cari.',
+      en: "Hello! I'm Nisrina Putri, an Internet Engineering Technology student at UGM with a keen interest in network architecture. To me, networking is fascinating because it is the foundation that connects the entire digital ecosystem. Driven by a strong curiosity, I'm always eager to broaden my technical knowledge through study and collaboration in the technology industry.",
+      id: 'Halo! Saya Nisrina Putri, mahasiswi Teknologi Rekayasa Internet UGM yang punya ketertarikan pada arsitektur jaringan. Bagi saya, dunia jaringan sangat memikat karena merupakan fondasi yang menghubungkan seluruh ekosistem digital. Terdorong oleh rasa ingin tahu yang besar, saya selalu bersemangat memperluas wawasan teknis melalui studi dan kolaborasi di bidang industri teknologi.',
     },
     photo: portrait,
-    photoAlt: {
-      en: 'Placeholder photo of the site owner',
-      id: 'Foto pemilik situs (contoh)',
-    },
+    photoAlt: portraitAlt,
     caption: { en: "hi, it's me!", id: 'hai, ini aku!' },
     facts: [
       {
@@ -106,65 +107,67 @@ export const content: SiteContent = parseContent({
         value: { en: 'TRI · DTEDI', id: 'TRI · DTEDI' },
       },
       {
+        label: { en: 'Class of', id: 'Angkatan' },
+        value: { en: '2024', id: '2024' },
+      },
+      {
         label: { en: 'Semester', id: 'Semester' },
         value: { en: '5', id: '5' },
+      },
+      {
+        label: { en: 'GPA', id: 'IPK' },
+        value: { en: '3.82', id: '3,82' },
       },
       {
         label: { en: 'Based in', id: 'Domisili' },
         value: { en: 'Yogyakarta', id: 'Yogyakarta' },
       },
     ],
-    skills: ['Mikrotik', 'Cisco Packet Tracer', 'Fiber Optic', 'Linux Server', 'HTML & CSS'],
+    skills: ['Mikrotik', 'Cisco Packet Tracer', 'Wireshark', 'Linux', 'Ubuntu'],
     song: 'Judul Lagu Favorit',
   },
 
+  // The owner's list, newest first. Steps without a date wait for one (when is optional).
   study: {
     kicker: { en: '// study journey', id: '// perjalanan kuliah' },
-    heading: {
-      en: 'From *“what is an IP address?”* to building my own network.',
-      id: 'Dari *“apa itu IP address?”* sampai merakit jaringan sendiri.',
-    },
     items: [
       {
-        when: { en: '2023 · Sem 1', id: '2023 · Sem 1' },
-        title: { en: 'Started at TRI UGM', id: 'Masuk TRI UGM' },
-        text: {
-          en: 'Got to know the basics of computer networks and programming.',
-          id: 'Kenalan dengan dasar jaringan komputer dan pemrograman.',
+        when: { en: '2024 — Present', id: '2024 — Sekarang' },
+        title: {
+          en: 'Diploma IV, Internet Engineering Technology',
+          id: 'Diploma IV, Teknologi Rekayasa Internet',
         },
-      },
-      {
-        when: { en: '2024 · Sem 2', id: '2024 · Sem 2' },
-        title: { en: 'First router', id: 'Router pertama' },
-        text: {
-          en: 'Learned subnetting and Mikrotik configuration.',
-          id: 'Belajar subnetting dan konfigurasi Mikrotik.',
-        },
-      },
-      {
-        when: { en: '2024 · Sem 3', id: '2024 · Sem 3' },
-        title: { en: 'Fiber optic practicum', id: 'Praktikum fiber optik' },
-        text: {
-          en: 'Splicing, OTDR testing and FTTH installation.',
-          id: 'Splicing, uji OTDR, dan instalasi FTTH.',
-        },
-      },
-      {
-        when: { en: '2025 · Sem 4', id: '2025 · Sem 4' },
-        title: { en: 'IoT project', id: 'Proyek IoT' },
-        text: {
-          en: 'Sensors and a simple monitoring dashboard.',
-          id: 'Sensor dan dashboard monitoring sederhana.',
-        },
-      },
-      {
-        when: { en: '2025 · Sem 5', id: '2025 · Sem 5' },
-        title: { en: 'Now', id: 'Sekarang' },
-        text: {
-          en: 'Looking for an internship in internet & networking.',
-          id: 'Mencari magang di bidang internet & jaringan.',
-        },
+        text: { en: 'Universitas Gadjah Mada', id: 'Universitas Gadjah Mada' },
         current: true,
+      },
+      {
+        when: { en: 'Oct 2024 — Present', id: 'Okt 2024 — Sekarang' },
+        title: { en: 'Public Relations Division', id: 'Divisi Humas' },
+        text: { en: 'Forkom TRI SV UGM', id: 'Forkom TRI SV UGM' },
+        current: true,
+      },
+      {
+        title: { en: 'Database Practicum Assistant', id: 'Asisten Praktikum Basis Data' },
+        text: { en: 'DTEDI SV UGM', id: 'DTEDI SV UGM' },
+      },
+      {
+        title: {
+          en: 'Equipment Sub-coordinator, Catering Division',
+          id: 'Sub Koordinator Perlengkapan, Divisi Konsum',
+        },
+        text: { en: 'NetComp 4.0', id: 'NetComp 4.0' },
+      },
+      {
+        title: {
+          en: 'Equipment Staff, Catering Division',
+          id: 'Anggota Perlengkapan, Divisi Konsum',
+        },
+        text: { en: 'NetComp 3.0', id: 'NetComp 3.0' },
+      },
+      {
+        when: { en: '2021 — 2024', id: '2021 — 2024' },
+        title: { en: 'SMA Negeri 5 Yogyakarta', id: 'SMA Negeri 5 Yogyakarta' },
+        text: { en: 'Senior high school', id: 'Sekolah menengah atas' },
       },
     ],
   },
@@ -260,12 +263,14 @@ export const content: SiteContent = parseContent({
   certificates: {
     items: [
       {
-        title: 'MTCNA',
-        issuer: 'MikroTik',
-        year: 2024,
-        image: cert1,
-        alt: { en: 'Placeholder scan of the MTCNA certificate', id: 'Pindaian sertifikat MTCNA (contoh)' },
-        credentialUrl: 'https://example.com/credentials/mtcna',
+        title: 'Training Fiber Optik Bersertifikasi BNSP',
+        issuer: 'LPK Pasopati',
+        year: 2026,
+        image: certFiberOptik,
+        alt: {
+          en: 'Certificate from LPK Pasopati for the BNSP-certified Fiber Optic Training, 11–13 March 2026, awarded to Nisrina Putri Fatimah Azzahra',
+          id: 'Sertifikat LPK Pasopati untuk Training Fiber Optik Bersertifikasi BNSP, 11–13 Maret 2026, atas nama Nisrina Putri Fatimah Azzahra',
+        },
       },
       {
         title: 'CCNA: Introduction to Networks',
